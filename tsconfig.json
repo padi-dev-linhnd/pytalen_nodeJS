@@ -1,0 +1,48 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "target": "es2017",
+    "lib": ["es2017", "esnext.asynciterable"],
+    "typeRoots": ["node_modules/@types"],
+    "types": ["@types/jest"],
+    "allowSyntheticDefaultImports": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "node",
+    "module": "commonjs",
+    "pretty": true,
+    "sourceMap": true,
+    "declaration": true,
+    "outDir": "dist",
+    "allowJs": true,
+    "noEmit": false,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "importHelpers": true,
+    "baseUrl": "src",
+    "paths": {
+      "@app": ["app"],
+      "@decorators/*": ["decorators/*"],
+      "@enum/*": ["enum/*"],
+      "@env": ["env"],
+      "@exceptions/*": ["common/exceptions/*"],
+      "@lib/*": ["common/lib/*"],
+      "@middlewares/*": ["app/middlewares/*"],
+      "@models/*": ["models/*"],
+      "@interfaces/*": ["interfaces/*"],
+      "@repositories/*": ["app/repositories/*"],
+      "@utils/*": ["common/utils/*"]
+    }
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.json",
+    "src/tests/*.test.ts",
+    "src/tests/**/*.test.ts"
+  ],
+  "exclude": ["node_modules", "src/logs", "src/tests"],
+  "ts-node": {
+    "require": ["tsconfig-paths/register"]
+  }
+}
