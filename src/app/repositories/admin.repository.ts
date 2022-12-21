@@ -21,7 +21,7 @@ class AdminRepository extends BaseRepository<Admin> implements AdminRepositoryIn
     })
   }
 
-  async checkLogin(dataReq: object): Promise<Admin> {
+  async AdminLogin(dataReq: object): Promise<Admin> {
     const dataDB = await this.findByCondition({
       where: { email: dataReq.email, password: dataReq.password },
       attributes: {
@@ -34,9 +34,13 @@ class AdminRepository extends BaseRepository<Admin> implements AdminRepositoryIn
     else {
       const token = jwt.sign(dataDB, process.env.JWT_SECRET)
       await this.update({ token: token }, { where: { id: 1 } })
-      console.log('co toi day k ')
+      dataDB.token = token
       return dataDB
     }
+  }
+
+  async AdminLogout(accessToken: string): Promise<Admin> {
+    return this.update({ token: null }, { where: { token: accessToken } })
   }
 }
 
