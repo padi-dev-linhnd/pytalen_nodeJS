@@ -16,14 +16,13 @@ export class AdminMiddleware implements ExpressMiddlewareInterface {
     }
     const accessToken = bearer.split('Bearer ')[1].trim()
     try {
-      const dataAdmin = jwt.verify(accessToken, process.env.JWT_SECRET)
-      console.log('phan quyen', dataAdmin.role)
-      //   const admin = await Admin.findOne({
-      //     where: {},
-      //     raw: true,
-      //   })
-
-      if (dataAdmin.role != 'admins') {
+      // const dataAdmin = jwt.verify(accessToken, process.env.JWT_SECRET)
+      // console.log('phan quyen', dataAdmin.role)
+      const admindata = await Admin.findOne({
+        where: { token: accessToken },
+        raw: true,
+      })
+      if (admindata.role != 'admin') {
         return next(new HttpException(401, 'Not admin'))
       }
       return next()

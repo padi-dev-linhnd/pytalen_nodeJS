@@ -2,41 +2,36 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('admin', {
+    await queryInterface.createTable('gametype', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER,
       },
-      user_name: {
+
+      name: {
         type: Sequelize.STRING(255),
-        field: 'user_name',
+        field: 'name',
         allowNull: false,
       },
 
-      email: {
+      total_time: {
         type: Sequelize.STRING(255),
-        field: 'email',
+        field: 'total_time',
         allowNull: false,
       },
 
-      role: {
+      time_question: {
         type: Sequelize.STRING(255),
-        field: 'role',
+        field: 'time_question',
         allowNull: false,
       },
 
-      password: {
-        type: Sequelize.TEXT,
-        field: 'password',
+      total_question: {
+        type: Sequelize.STRING(255),
+        field: 'total_question',
         allowNull: false,
-      },
-
-      token: {
-        type: Sequelize.TEXT,
-        field: 'token',
-        allowNull: true,
       },
 
       createdAt: {
@@ -52,6 +47,6 @@ module.exports = {
     })
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('admin')
+    await queryInterface.dropTable('gametype')
   },
 }

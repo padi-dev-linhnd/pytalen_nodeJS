@@ -4,7 +4,6 @@ import { BaseController } from './base.controller'
 import { Service } from 'typedi'
 import AdminRepository from '@repositories/admin.repository'
 import { HttpException } from '@exceptions/http.exception'
-import { AdminMiddleware } from '@middlewares/check_Admin.middleware'
 @JsonController('/admin')
 @Service()
 export class AdminController extends BaseController {
@@ -14,15 +13,17 @@ export class AdminController extends BaseController {
 
   @Post('/login')
   async Admin_login(@Req() req: any, @Res() res: any, next: NextFunction) {
-    const dataReq = req.body
     try {
-      const dataAdmin = await this.adminRepository.AdminLogin(dataReq)
-      return this.setData(dataAdmin).setMessage('Success').responseSuccess(res)
+      const dataReq = req.body
+      if (dataReq.email && dataReq.password) {
+        const dataAdmin = await this.adminRepository.User_Login(dataReq)
+        return this.setData(dataAdmin).setMessage('Success').responseSuccess(res)
+      }
     } catch (error) {
       return this.setMessage('Error').responseErrors(res)
     }
   }
-  @UseBefore(AdminMiddleware)
+
   @Post('/logout')
   async Admin_logout(@Req() req: any, @Res() res: any, next: NextFunction) {
     try {
@@ -31,7 +32,7 @@ export class AdminController extends BaseController {
         return next(new HttpException(401, 'not find bearer'))
       }
       const accessToken = bearer.split('Bearer ')[1].trim()
-      const data = await this.adminRepository.AdminLogout(accessToken)
+      const data = await this.adminRepository.User_Logout(accessToken)
       if (data[0] == 0) {
         return this.setData(undefined).setMessage('token does not exist').responseSuccess(res)
       }
