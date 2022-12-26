@@ -1,11 +1,11 @@
-const admins = [
+const admin = [
   {
     id: 1,
     user_name: 'Nguyen Danh Linh',
     email: 'linhnd@paditech.com',
-    role: 'admins',
+    role: 'admin',
     password: 'ndl20092001',
-    token: 'day la token',
+    token: null,
     created_at: new Date(),
     updated_at: new Date(),
   },
@@ -13,12 +13,12 @@ const admins = [
 
 module.exports = {
   up: (queryInterface, Sequelize) => {
-    return queryInterface.bulkInsert('admins', admins, {})
+    return queryInterface.bulkInsert('admin', admin, {})
   },
 
   down: (queryInterface, Sequelize) => {
-    return queryInterface.bulkDelete('admins', {
-      id: admins.map((collection) => collection.id),
+    return queryInterface.bulkDelete('admin', {
+      id: admin.map((collection) => collection.id),
     })
   },
 }

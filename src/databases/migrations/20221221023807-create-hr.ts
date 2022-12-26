@@ -2,7 +2,7 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('admin', {
+    await queryInterface.createTable('hr', {
       id: {
         allowNull: false,
         autoIncrement: true,
@@ -39,6 +39,30 @@ module.exports = {
         allowNull: true,
       },
 
+      company: {
+        type: Sequelize.STRING(255),
+        field: 'company',
+        allowNull: false,
+      },
+
+      company_size: {
+        type: Sequelize.STRING(255),
+        field: 'company_size',
+        allowNull: false,
+      },
+
+      company_industry: {
+        type: Sequelize.STRING(255),
+        field: 'company_industry',
+        allowNull: false,
+      },
+
+      company_logo: {
+        type: Sequelize.STRING(255),
+        field: 'company_logo',
+        allowNull: false,
+      },
+
       createdAt: {
         allowNull: false,
         field: 'created_at',
@@ -52,6 +76,6 @@ module.exports = {
     })
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('admin')
+    await queryInterface.dropTable('hr')
   },
 }

@@ -1,6 +1,7 @@
 import { Service } from 'typedi'
 import { ModelCtor, Model } from 'sequelize-typescript'
 import { BaseRepositoryInterface } from './interfaces/base.repository.interface'
+import jwt, { Secret, JwtPayload } from 'jsonwebtoken'
 
 @Service()
 export abstract class BaseRepository<M extends Model> implements BaseRepositoryInterface {
@@ -16,6 +17,10 @@ export abstract class BaseRepository<M extends Model> implements BaseRepositoryI
 
   async getAll(): Promise<M[]> {
     return this.model.findAll()
+  }
+
+  async getAllWhere(object: Object): Promise<M[]> {
+    return this.model.findAll(object)
   }
 
   async findByCondition(object: Object): Promise<M> {
@@ -45,6 +50,29 @@ export abstract class BaseRepository<M extends Model> implements BaseRepositoryI
 
   async update(object: Object, condition: any): Promise<any> {
     return this.model.update(object, condition)
+  }
+
+  // login/logout
+  async User_Login(dataReq: any): Promise<any> {
+    const dataDB: any = await this.findByCondition({
+      where: { email: dataReq.email, password: dataReq.password },
+      attributes: {
+        exclude: ['token', 'password', 'createdAt', 'updatedAt'],
+      },
+      raw: true,
+      nest: true,
+    })
+    if (!dataDB) return null
+    else {
+      const token = jwt.sign(dataDB, process.env.JWT_SECRET)
+      await this.update({ token: token }, { where: { id: 1 } })
+      dataDB.token = token
+      return dataDB
+    }
+  }
+
+  async User_Logout(accessToken: string): Promise<any> {
+    return this.update({ token: null }, { where: { token: accessToken } })
   }
 
   /**

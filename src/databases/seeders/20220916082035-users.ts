@@ -7,20 +7,6 @@ const users = [
     email: 'user01@example.com',
     password: '$2b$10$uAAaPu7svUAz8XLjEApZoOTL3/zYUTAj1VSz82HRozhWpJdbT7y1S',
   },
-
-  // {
-  //   id: 2,
-  //   name: 'name user 2',
-  //   email: 'user02@example.com',
-  //   password: '$2b$10$SuNanIIQKwWnjPdpRAgsqOq9QusGks6kjMbPuiPc1dMjqlFvjU1Bq',
-  // },
-
-  // {
-  //   id: 3,
-  //   name: 'name user 3',
-  //   email: 'user03@example.com',
-  //   password: '$2b$10$tyeJwA/5AXJQogXIrDwDweO4.8s2Es5ICR.gFp6bNFoDsfJ3bbe9u',
-  // },
 ]
 
 module.exports = {
