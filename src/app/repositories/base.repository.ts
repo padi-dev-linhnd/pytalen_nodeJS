@@ -65,8 +65,9 @@ export abstract class BaseRepository<M extends Model> implements BaseRepositoryI
     if (!dataDB) return null
     else {
       const token = jwt.sign(dataDB, process.env.JWT_SECRET)
-      await this.update({ token: token }, { where: { id: 1 } })
+      await this.update({ token: token }, { where: { id: dataDB.id } })
       dataDB.token = token
+      delete dataDB.role
       return dataDB
     }
   }

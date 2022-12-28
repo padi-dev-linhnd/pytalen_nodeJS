@@ -4,8 +4,6 @@ import { BaseController } from './base.controller'
 import { Service } from 'typedi'
 import HrRepository from '@repositories/hr.repository'
 import { AdminMiddleware } from '@middlewares/check_Admin.middleware'
-import { HttpException } from '@exceptions/http.exception'
-import HrGameType from '@models/entities/hrgametype.entity'
 
 @JsonController('/hr')
 @Service()
@@ -18,7 +16,11 @@ export class HrController extends BaseController {
   @Get('/list')
   async getHr(@Req() req: any, @Res() res: any, next: NextFunction) {
     try {
-      const findAllHrData = await this.hrRepository.getAll()
+      const findAllHrData = await this.hrRepository.getAllWhere({
+        attributes: {
+          exclude: ['password', 'token', 'createdAt', 'updatedAt'],
+        },
+      })
       return this.setData(findAllHrData).setMessage('Success').responseSuccess(res)
     } catch (error) {
       return this.setMessage('Error').responseErrors(res)
@@ -30,24 +32,11 @@ export class HrController extends BaseController {
   async createHr(@Req() req: any, @Res() res: any, next: NextFunction) {
     try {
       const dataReq = req.body
-      const dataGame = dataReq.list
-      delete dataReq.list
-      const dataHr = await this.hrRepository.findByEmail(dataReq.email)
-      if (dataHr) {
-        return res.send({
-          status: false,
-          code: 401,
-          message: 'Email already exists',
-        })
+      const dataHr = await this.hrRepository.create_Hr(dataReq)
+      if (dataHr == null) {
+        return this.setErrors(401, 'Email already exists', res)
       }
-      await this.hrRepository.create(dataReq)
-      const hr_id = (await this.hrRepository.findByEmail(dataReq.email)).id
-      dataGame.map((item) => {
-        item.hr_id = hr_id
-        item.gametype_id = item.gametype_id
-      })
-      await HrGameType.bulkCreate(dataGame)
-      return this.setData(undefined).setMessage('Success').responseSuccess(res)
+      return this.setData(dataHr).setMessage('Success').responseSuccess(res)
     } catch (error) {
       return this.setMessage('Error').responseErrors(res)
     }
@@ -57,10 +46,8 @@ export class HrController extends BaseController {
   async Hr_login(@Req() req: any, @Res() res: any, next: NextFunction) {
     try {
       const dataReq = req.body
-      if (dataReq.email && dataReq.password) {
-        const dataHr = await this.hrRepository.User_Login(dataReq)
-        return this.setData(dataHr).setMessage('Success').responseSuccess(res)
-      }
+      const dataHr = await this.hrRepository.User_Login(dataReq)
+      return this.setData(dataHr).setMessage('Success').responseSuccess(res)
     } catch (error) {
       return this.setMessage('Error').responseErrors(res)
     }
@@ -71,7 +58,7 @@ export class HrController extends BaseController {
     try {
       const bearer = req.headers.authorization
       if (!bearer || !bearer.startsWith('Bearer ')) {
-        return next(new HttpException(401, 'not find bearer'))
+        return this.setErrors(401, 'not bearer', res)
       }
       const accessToken = bearer.split('Bearer ')[1].trim()
       const data = await this.hrRepository.User_Logout(accessToken)

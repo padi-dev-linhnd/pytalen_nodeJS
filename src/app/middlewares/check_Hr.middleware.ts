@@ -1,13 +1,13 @@
 import { Get, Post, JsonController, Req, Res } from 'routing-controllers'
 import { NextFunction } from 'express'
 import { ExpressMiddlewareInterface } from 'routing-controllers'
-import Admin from '@models/entities/admin.entity'
+import Hr from '@models/entities/hr.entity'
 import { Service } from 'typedi'
 import { HttpException } from '@exceptions/http.exception'
 import jwt, { Secret, JwtPayload } from 'jsonwebtoken'
 
 @Service()
-export class AdminMiddleware implements ExpressMiddlewareInterface {
+export class HrMiddleware implements ExpressMiddlewareInterface {
   // interface implementation is optional
   async use(@Req() req: any, @Res() res: any, next: NextFunction): Promise<any> {
     const bearer = req.headers.authorization
@@ -16,13 +16,13 @@ export class AdminMiddleware implements ExpressMiddlewareInterface {
     }
     const accessToken = bearer.split('Bearer ')[1].trim()
     try {
-      const dataAdmin: any = jwt.verify(accessToken, process.env.JWT_SECRET)
-      const admindata = await Admin.findOne({
+      const dataHr: any = jwt.verify(accessToken, process.env.JWT_SECRET)
+      const hrdata = await Hr.findOne({
         where: { token: accessToken },
         raw: true,
       })
-      if (dataAdmin.role != 'admin' || !admindata) {
-        return next(new HttpException(401, 'Not admin'))
+      if (dataHr.role != 'hr' || !hrdata) {
+        return next(new HttpException(401, 'Not hr'))
       }
       return next()
     } catch (error) {

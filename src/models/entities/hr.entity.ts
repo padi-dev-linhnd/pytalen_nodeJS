@@ -10,6 +10,7 @@ import {
 } from 'sequelize-typescript'
 import Hr_gametype from './hrgametype.entity'
 import Gametype from './gametype.entity'
+import Assessment from './assessment.entity'
 
 @Table({
   tableName: 'hr',
@@ -48,6 +49,9 @@ export default class Hr extends Model<Hr> {
 
   @BelongsToMany(() => Gametype, () => Hr_gametype)
   Gametype!: Gametype[]
+
+  @HasMany(() => Assessment)
+  Assessment!: Assessment[]
 
   @CreatedAt
   @Column
