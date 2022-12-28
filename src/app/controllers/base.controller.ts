@@ -57,4 +57,12 @@ export class BaseController {
   } {
     return this.getResponse(res, false)
   }
+
+  setErrors(status: number, message: string, res: any) {
+    return res.status(status).send({
+      status: false,
+      code: status,
+      message: message,
+    })
+  }
 }

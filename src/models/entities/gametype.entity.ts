@@ -10,6 +10,9 @@ import {
 } from 'sequelize-typescript'
 import Hr_gametype from './hrgametype.entity'
 import Hr from './hr.entity'
+import Assessment from './assessment.entity'
+import Assessment_Gametype_Question from './assessment_gametypes_question.entity'
+import Question from './question.entity'
 
 @Table({
   tableName: 'gametype',
@@ -33,6 +36,12 @@ export default class Gametype extends Model<Gametype> {
 
   @BelongsToMany(() => Hr, () => Hr_gametype)
   Hr!: Hr[]
+
+  @BelongsToMany(() => Assessment, () => Assessment_Gametype_Question)
+  Assessment!: Assessment[]
+
+  @HasMany(() => Question)
+  Question!: Question[]
 
   @CreatedAt
   @Column

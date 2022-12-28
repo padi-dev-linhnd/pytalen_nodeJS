@@ -3,7 +3,6 @@ import { NextFunction } from 'express'
 import { BaseController } from './base.controller'
 import { Service } from 'typedi'
 import AdminRepository from '@repositories/admin.repository'
-import { HttpException } from '@exceptions/http.exception'
 @JsonController('/admin')
 @Service()
 export class AdminController extends BaseController {
@@ -15,10 +14,8 @@ export class AdminController extends BaseController {
   async Admin_login(@Req() req: any, @Res() res: any, next: NextFunction) {
     try {
       const dataReq = req.body
-      if (dataReq.email && dataReq.password) {
-        const dataAdmin = await this.adminRepository.User_Login(dataReq)
-        return this.setData(dataAdmin).setMessage('Success').responseSuccess(res)
-      }
+      const dataAdmin = await this.adminRepository.User_Login(dataReq)
+      return this.setData(dataAdmin).setMessage('Success').responseSuccess(res)
     } catch (error) {
       return this.setMessage('Error').responseErrors(res)
     }
@@ -29,7 +26,7 @@ export class AdminController extends BaseController {
     try {
       const bearer = req.headers.authorization
       if (!bearer || !bearer.startsWith('Bearer ')) {
-        return next(new HttpException(401, 'not find bearer'))
+        return this.setErrors(401, 'not bearer', res)
       }
       const accessToken = bearer.split('Bearer ')[1].trim()
       const data = await this.adminRepository.User_Logout(accessToken)
