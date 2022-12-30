@@ -5,11 +5,10 @@ import { BaseRepository } from './base.repository'
 import { AssessmentRepositoryInterface } from './interfaces/assessment.repository.interface'
 import { ModelContainer } from '@decorators/model.decorator'
 import jwt, { Secret, JwtPayload } from 'jsonwebtoken'
-
-import Assessment_gametypes_question from '@models/entities/assessment_gametypes_question.entity'
-import Answer from '@models/entities/answer.entity'
-import Question from '@models/entities/question.entity'
-import Sequelize from 'sequelize'
+const { Op } = require('sequelize')
+import Gametype from '@models/entities/gametype.entity'
+import Hr from '@models/entities/hr.entity'
+import Assessment_gametype from '@models/entities/assessment_gametype.entity'
 
 @Service({ global: true })
 class AssessmentRepository
@@ -20,13 +19,20 @@ class AssessmentRepository
     super(Assessment)
   }
 
-  async get_list_assessment(accessToken: any): Promise<Assessment> {
+  async get_list_assessment(accessToken: any): Promise<any> {
     const dataHr: any = jwt.verify(accessToken, process.env.JWT_SECRET)
+    if (dataHr.role == 'admin') {
+      return this.getAllWhere({
+        raw: true,
+        nest: true,
+        attributes: ['id', 'name', 'position', 'start_date', 'end_date'],
+      })
+    }
     const dataAssessment: any = await this.getAllWhere({
       where: {
         hr_id: dataHr.id,
       },
-      attributes: ['name', 'position', 'start_date', 'end_date'],
+      attributes: ['id', 'name', 'position', 'start_date', 'end_date'],
       raw: true,
       nest: true,
     })
@@ -45,68 +51,34 @@ class AssessmentRepository
     if (dataAssessment) {
       return null
     }
-    await this.create(dataReq)
-    const assessment_id = (
-      await this.findByCondition({
-        where: {
-          name: dataReq.name,
-          hr_id: dataReq.hr_id,
+    const datagametype: any = await Gametype.findAll({
+      where: {
+        id: {
+          [Op.or]: dataGametype,
         },
-      })
-    ).id
-    dataGametype.forEach(async (item) => {
-      if (item.gametype_id == 2) {
-        for (let i = 0; i <= 1; i++) {
-          const dataQuestion: any = await Question.findAll({
-            order: Sequelize.literal('random()'),
-            limit: 5,
-            include: {
-              model: Answer,
-              where: { answer: 'dung', correct_answer: i },
-              attributes: {
-                exclude: ['password', 'createdAt', 'updatedAt'],
-              },
-            },
-            attributes: ['id', 'gametype_id'],
-            where: {
-              gametype_id: item.gametype_id,
-            },
-            raw: true,
-            nest: true,
-          })
-          dataQuestion.map((item) => {
-            item.question_id = item.id
-            item.gametype_id = item.gametype_id
-            item.assessment_id = assessment_id
-            delete item.Answer
-            delete item.id
-          })
-          await Assessment_gametypes_question.bulkCreate(dataQuestion)
-        }
-      }
-
-      if (item.gametype_id == 1) {
-        for (let i = 1; i <= 10; i++) {
-          const dataQuestion: any = await Question.findAll({
-            order: Sequelize.literal('random()'),
-            limit: 1,
-            attributes: ['id', 'gametype_id'],
-            where: {
-              level: i,
-            },
-            raw: true,
-            nest: true,
-          })
-          dataQuestion.map((item) => {
-            item.question_id = item.id
-            item.gametype_id = item.gametype_id
-            item.assessment_id = assessment_id
-            delete item.id
-          })
-          await Assessment_gametypes_question.bulkCreate(dataQuestion)
-        }
+      },
+      raw: true,
+      nest: true,
+      include: {
+        model: Hr,
+        where: {
+          id: dataReq.hr_id,
+        },
+      },
+    })
+    if (dataGametype.length != datagametype.length) {
+      return undefined
+    }
+    this.create(dataReq)
+    const assessment_id: any = (await this.findByCondition({ where: dataReq })).id
+    dataGametype.map((item, index) => {
+      dataGametype[index] = {
+        assessment_id: assessment_id,
+        gametype_id: item,
       }
     })
+    Assessment_gametype.bulkCreate(dataGametype)
+    delete dataReq.hr_id
     return dataReq
   }
 }

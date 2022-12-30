@@ -20,9 +20,6 @@ export default class Admin extends Model<Admin> {
   @Column
   password!: string
 
-  @Column
-  token!: string
-
   @CreatedAt
   @Column
   createdAt!: Date

@@ -15,25 +15,10 @@ export class AdminController extends BaseController {
     try {
       const dataReq = req.body
       const dataAdmin = await this.adminRepository.User_Login(dataReq)
+      if (dataAdmin == null) {
+        return this.setErrors(401, 'wrong username or password', res)
+      }
       return this.setData(dataAdmin).setMessage('Success').responseSuccess(res)
-    } catch (error) {
-      return this.setMessage('Error').responseErrors(res)
-    }
-  }
-
-  @Post('/logout')
-  async Admin_logout(@Req() req: any, @Res() res: any, next: NextFunction) {
-    try {
-      const bearer = req.headers.authorization
-      if (!bearer || !bearer.startsWith('Bearer ')) {
-        return this.setErrors(401, 'not bearer', res)
-      }
-      const accessToken = bearer.split('Bearer ')[1].trim()
-      const data = await this.adminRepository.User_Logout(accessToken)
-      if (data[0] == 0) {
-        return this.setData(undefined).setMessage('token does not exist').responseSuccess(res)
-      }
-      return this.setData(undefined).setMessage('successful logout').responseSuccess(res)
     } catch (error) {
       return this.setMessage('Error').responseErrors(res)
     }

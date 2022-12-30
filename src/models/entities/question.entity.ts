@@ -10,7 +10,7 @@ import {
   HasMany,
 } from 'sequelize-typescript'
 import Gametype from './gametype.entity'
-import Assessment_Gametype_Question from './assessment_gametypes_question.entity'
+import Assessment_Gametype_Question from './candidate_gametypes_question.entity'
 import Answer from './answer.entity'
 
 @Table({
@@ -21,12 +21,14 @@ export default class Question extends Model<Question> {
   @Column
   id!: number
 
+  // nhieu mot voi gametype
   @ForeignKey(() => Gametype)
   @Column
   gametype_id!: number
 
   @BelongsTo(() => Gametype)
   Gametype!: Gametype
+  // ----------------------
 
   @Column
   question!: string
@@ -34,11 +36,15 @@ export default class Question extends Model<Question> {
   @Column
   level!: number
 
+  // mot nhieu voi Assessment_Gametype_Question
   @HasMany(() => Assessment_Gametype_Question)
   Assessment_Gametype_Question!: Assessment_Gametype_Question[]
+  // ---------------------------
 
+  // mot - nhieu answer
   @HasMany(() => Answer)
   Answer!: Answer[]
+  // ------------------
 
   @CreatedAt
   @Column

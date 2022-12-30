@@ -19,12 +19,14 @@ export default class Answer extends Model<Answer> {
   @Column
   id!: number
 
+  // nhieu - mot question
   @ForeignKey(() => Question)
   @Column
   question_id!: number
 
   @BelongsTo(() => Question)
   Question!: Question
+  // ------------------------
 
   @Column
   answer!: string

@@ -11,6 +11,8 @@ import {
 import Hr_gametype from './hrgametype.entity'
 import Gametype from './gametype.entity'
 import Assessment from './assessment.entity'
+import Candidate from './candidate.entity'
+import Invite from './invite.entity'
 
 @Table({
   tableName: 'hr',
@@ -33,9 +35,6 @@ export default class Hr extends Model<Hr> {
   password!: string
 
   @Column
-  token!: string
-
-  @Column
   company!: string
 
   @Column
@@ -47,11 +46,20 @@ export default class Hr extends Model<Hr> {
   @Column
   company_logo!: string
 
+  // nhieu nhieu voi gametype = Hr_gametype
   @BelongsToMany(() => Gametype, () => Hr_gametype)
   Gametype!: Gametype[]
+  // ---------------------------
 
+  // nhieu nhieu voi candidate = Invite
+  @BelongsToMany(() => Candidate, () => Invite)
+  Candidate!: Candidate[]
+  // -----------------------------
+
+  // mot nhieu assessment
   @HasMany(() => Assessment)
   Assessment!: Assessment[]
+  // -------------------
 
   @CreatedAt
   @Column

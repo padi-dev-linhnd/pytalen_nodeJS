@@ -6,8 +6,6 @@ import { HrMiddleware } from '@middlewares/check_Hr.middleware'
 import jwt, { Secret, JwtPayload } from 'jsonwebtoken'
 import Assessment from '@repositories/assessment.repository'
 
-import nodemailer from 'nodemailer'
-
 @JsonController('/assessment')
 @Service()
 export class AssessmentController extends BaseController {
@@ -33,11 +31,21 @@ export class AssessmentController extends BaseController {
     try {
       const accessToken = req.headers.authorization.split('Bearer ')[1].trim()
       const dataHr: any = jwt.verify(accessToken, process.env.JWT_SECRET)
+      if (dataHr.role == 'admin') {
+        return this.setErrors(401, 'you are admin', res)
+      }
       const dataReq: any = req.body
       dataReq.hr_id = dataHr.id
       const dataAssessment = await this.assessment.create_Assessment(dataReq)
-      if (dataAssessment == null) {
+      if (dataAssessment === null) {
         return this.setErrors(401, 'Assessment already exists', res)
+      }
+      if (dataAssessment === undefined) {
+        return this.setErrors(
+          401,
+          'Hr does not have permission to create Assessment with these GameType',
+          res,
+        )
       }
       return this.setData(dataAssessment).setMessage('Success').responseSuccess(res)
     } catch (error) {

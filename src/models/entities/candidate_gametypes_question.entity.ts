@@ -8,32 +8,42 @@ import {
   UpdatedAt,
   BelongsTo,
 } from 'sequelize-typescript'
-import Assessment from './assessment.entity'
 import Gametype from './gametype.entity'
 import Question from './question.entity'
+import Candidate from './candidate.entity'
 
 @Table({
-  tableName: 'assessment_gametypes_question',
+  tableName: 'candidate_gametypes_question',
 })
-export default class Assessment_gametypes_question extends Model<Assessment_gametypes_question> {
+export default class Candidate_gametypes_question extends Model<Candidate_gametypes_question> {
   @PrimaryKey
   @Column
   id!: number
-
-  @ForeignKey(() => Assessment)
-  @Column
-  assessment_id!: number
 
   @ForeignKey(() => Gametype)
   @Column
   gametype_id!: number
 
+  @BelongsTo(() => Gametype)
+  Gametype!: Gametype
+
+  // nhieu mot voi question
   @ForeignKey(() => Question)
   @Column
   question_id!: number
 
   @BelongsTo(() => Question)
   Question!: Question
+  // ---------------------
+
+  // nhieu - mot voi candidate
+  @ForeignKey(() => Candidate)
+  @Column
+  candidate_id!: number
+
+  @BelongsTo(() => Candidate)
+  Candidate!: Candidate
+  // ---------------------
 
   @CreatedAt
   @Column

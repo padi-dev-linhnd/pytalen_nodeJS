@@ -4,6 +4,8 @@ import { BaseController } from './base.controller'
 import { Service } from 'typedi'
 import HrRepository from '@repositories/hr.repository'
 import { AdminMiddleware } from '@middlewares/check_Admin.middleware'
+import { HrMiddleware } from '@middlewares/check_Hr.middleware'
+import jwt, { Secret, JwtPayload } from 'jsonwebtoken'
 
 @JsonController('/hr')
 @Service()
@@ -42,30 +44,37 @@ export class HrController extends BaseController {
     }
   }
 
+  @UseBefore(HrMiddleware)
+  @Post('/invite')
+  async invite_cadidate(@Req() req: any, @Res() res: any, next: NextFunction) {
+    try {
+      const accessToken = req.headers.authorization.split('Bearer ')[1].trim()
+      const dataHr: any = jwt.verify(accessToken, process.env.JWT_SECRET)
+      if (dataHr.role == 'admin') {
+        return this.setErrors(401, 'you are admin', res)
+      }
+      const dataReq: any = req.body
+      dataReq.hr_id = dataHr.id
+      const dataInvite = await this.hrRepository.invite_candidate(dataReq)
+      if (dataInvite == null) {
+        return this.setErrors(
+          401,
+          'This Hr does not have the right to invite Candidate into this Assessment',
+          res,
+        )
+      }
+      return this.setData(dataInvite).setMessage('Success').responseSuccess(res)
+    } catch (error) {
+      return this.setMessage('Error').responseErrors(res)
+    }
+  }
+
   @Post('/login')
   async Hr_login(@Req() req: any, @Res() res: any, next: NextFunction) {
     try {
       const dataReq = req.body
       const dataHr = await this.hrRepository.User_Login(dataReq)
       return this.setData(dataHr).setMessage('Success').responseSuccess(res)
-    } catch (error) {
-      return this.setMessage('Error').responseErrors(res)
-    }
-  }
-
-  @Post('/logout')
-  async Hr_logout(@Req() req: any, @Res() res: any, next: NextFunction) {
-    try {
-      const bearer = req.headers.authorization
-      if (!bearer || !bearer.startsWith('Bearer ')) {
-        return this.setErrors(401, 'not bearer', res)
-      }
-      const accessToken = bearer.split('Bearer ')[1].trim()
-      const data = await this.hrRepository.User_Logout(accessToken)
-      if (data[0] == 0) {
-        return this.setData(undefined).setMessage('token does not exist').responseSuccess(res)
-      }
-      return this.setData(undefined).setMessage('successful logout').responseSuccess(res)
     } catch (error) {
       return this.setMessage('Error').responseErrors(res)
     }

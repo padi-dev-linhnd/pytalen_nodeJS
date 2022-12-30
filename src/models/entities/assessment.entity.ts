@@ -11,7 +11,9 @@ import {
 } from 'sequelize-typescript'
 import Hr from './hr.entity'
 import Gametype from './gametype.entity'
-import Assessment_Gametype_Question from './assessment_gametypes_question.entity'
+import Assessment_gametype from './assessment_gametype.entity'
+import Candidate from './candidate.entity'
+import Invite from './invite.entity'
 
 @Table({
   tableName: 'assessment',
@@ -33,15 +35,22 @@ export default class Assessment extends Model<Assessment> {
   @Column
   end_date!: string
 
+  // nhieu - mot hr
   @ForeignKey(() => Hr)
   @Column
   hr_id!: number
 
   @BelongsTo(() => Hr)
   Hr!: Hr
+  // -----------------
 
-  @BelongsToMany(() => Gametype, () => Assessment_Gametype_Question)
+  // nhieu - nhieu gametype = assessment_gametype
+  @BelongsToMany(() => Gametype, () => Assessment_gametype)
   Gametype!: Gametype[]
+  // -------------------------------------------
+
+  @BelongsToMany(() => Candidate, () => Invite)
+  Candidate!: Candidate[]
 
   @CreatedAt
   @Column
