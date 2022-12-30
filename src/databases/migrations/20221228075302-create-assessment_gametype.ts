@@ -2,24 +2,12 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('assessment_gametypes_question', {
+    await queryInterface.createTable('assessment_gametype', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
         type: Sequelize.INTEGER,
-      },
-
-      gametype_id: {
-        type: Sequelize.INTEGER,
-        field: 'gametype_id',
-        allowNull: true,
-        onDelete: 'CASCADE',
-        onUpdate: 'CASCADE',
-        references: {
-          model: 'gametype',
-          key: 'id',
-        },
       },
 
       assessment_id: {
@@ -34,14 +22,14 @@ module.exports = {
         },
       },
 
-      question_id: {
+      gametype_id: {
         type: Sequelize.INTEGER,
-        field: 'question_id',
+        field: 'gametype_id',
         allowNull: true,
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE',
         references: {
-          model: 'question',
+          model: 'gametype',
           key: 'id',
         },
       },
@@ -59,6 +47,6 @@ module.exports = {
     })
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('assessment_gametypes_question')
+    await queryInterface.dropTable('assessment_gametype')
   },
 }

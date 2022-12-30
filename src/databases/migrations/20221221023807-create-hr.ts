@@ -33,12 +33,6 @@ module.exports = {
         allowNull: false,
       },
 
-      token: {
-        type: Sequelize.TEXT,
-        field: 'token',
-        allowNull: true,
-      },
-
       company: {
         type: Sequelize.STRING(255),
         field: 'company',

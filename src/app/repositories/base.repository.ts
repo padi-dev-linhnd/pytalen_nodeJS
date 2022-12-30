@@ -56,24 +56,17 @@ export abstract class BaseRepository<M extends Model> implements BaseRepositoryI
   async User_Login(dataReq: any): Promise<any> {
     const dataDB: any = await this.findByCondition({
       where: { email: dataReq.email, password: dataReq.password },
-      attributes: {
-        exclude: ['token', 'password', 'createdAt', 'updatedAt'],
-      },
+      attributes: ['id', 'email', 'role'],
       raw: true,
       nest: true,
     })
     if (!dataDB) return null
     else {
       const token = jwt.sign(dataDB, process.env.JWT_SECRET)
-      await this.update({ token: token }, { where: { id: dataDB.id } })
       dataDB.token = token
       delete dataDB.role
       return dataDB
     }
-  }
-
-  async User_Logout(accessToken: string): Promise<any> {
-    return this.update({ token: null }, { where: { token: accessToken } })
   }
 
   /**

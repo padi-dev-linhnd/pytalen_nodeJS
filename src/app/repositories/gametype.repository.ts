@@ -16,8 +16,15 @@ class GametypeRepository
     super(Gametype)
   }
 
-  async getGametypeByHr(accessToken: any): Promise<Gametype> {
+  async getGametype(accessToken: any): Promise<any> {
     const dataHr: any = jwt.verify(accessToken, process.env.JWT_SECRET)
+    if (dataHr.role == 'admin') {
+      return this.getAllWhere({
+        raw: true,
+        nest: true,
+        attributes: ['name', 'total_time', 'time_question', 'total_question'],
+      })
+    }
     const dataGametype: any = await this.getAllWhere({
       attributes: ['name', 'total_time', 'time_question', 'total_question'],
       include: {
@@ -29,7 +36,7 @@ class GametypeRepository
       raw: true,
       nest: true,
     })
-    dataGametype.map((item) => {
+    dataGametype.forEach((item) => {
       delete item.Hr
     })
     return dataGametype

@@ -5,7 +5,6 @@ const admin = [
     email: 'linhnd@paditech.com',
     role: 'admin',
     password: 'ndl20092001',
-    token: null,
     created_at: new Date(),
     updated_at: new Date(),
   },

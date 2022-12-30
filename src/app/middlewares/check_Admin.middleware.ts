@@ -1,7 +1,6 @@
 import { Get, Post, JsonController, Req, Res } from 'routing-controllers'
 import { NextFunction } from 'express'
 import { ExpressMiddlewareInterface } from 'routing-controllers'
-import Admin from '@models/entities/admin.entity'
 import { Service } from 'typedi'
 import { HttpException } from '@exceptions/http.exception'
 import jwt, { Secret, JwtPayload } from 'jsonwebtoken'
@@ -17,11 +16,7 @@ export class AdminMiddleware implements ExpressMiddlewareInterface {
     const accessToken = bearer.split('Bearer ')[1].trim()
     try {
       const dataAdmin: any = jwt.verify(accessToken, process.env.JWT_SECRET)
-      const admindata = await Admin.findOne({
-        where: { token: accessToken },
-        raw: true,
-      })
-      if (dataAdmin.role != 'admin' || !admindata) {
+      if (dataAdmin.role != 'admin') {
         return next(new HttpException(401, 'Not admin'))
       }
       return next()

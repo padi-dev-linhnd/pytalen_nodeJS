@@ -5,7 +5,6 @@ const hr = [
     email: 'linhnd@paditech.com',
     role: 'hr',
     password: 'ndl20092001',
-    token: '',
     company: 'paditech',
     company_size: 'size company',
     company_industry: 'industry company',
