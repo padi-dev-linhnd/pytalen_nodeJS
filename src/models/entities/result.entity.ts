@@ -11,11 +11,12 @@ import {
 import Gametype from './gametype.entity'
 import Question from './question.entity'
 import Candidate from './candidate.entity'
+import Assessment from './assessment.entity'
 
 @Table({
-  tableName: 'candidate_gametypes_question',
+  tableName: 'result',
 })
-export default class Candidate_gametypes_question extends Model<Candidate_gametypes_question> {
+export default class Result extends Model<Result> {
   @PrimaryKey
   @Column
   id!: number
@@ -44,6 +45,22 @@ export default class Candidate_gametypes_question extends Model<Candidate_gamety
   @BelongsTo(() => Candidate)
   Candidate!: Candidate
   // ---------------------
+
+  @ForeignKey(() => Assessment)
+  @Column
+  assessment_id!: number
+
+  @BelongsTo(() => Assessment)
+  Assessment!: Assessment
+
+  @Column
+  answer: string
+
+  @Column
+  status: boolean
+
+  @Column
+  point: number
 
   @CreatedAt
   @Column

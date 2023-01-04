@@ -13,7 +13,7 @@ import Hr from './hr.entity'
 import Assessment from './assessment.entity'
 import Assessment_gametype from './assessment_gametype.entity'
 import Question from './question.entity'
-import Candidate_gametypes_question from './candidate_gametypes_question.entity'
+import Result from './result.entity'
 
 @Table({
   tableName: 'gametype',
@@ -45,9 +45,9 @@ export default class Gametype extends Model<Gametype> {
   Assessment!: Assessment[]
   // -----------------------------------------
 
-  // mot nhieu Candidate_gametypes_question
-  @HasMany(() => Candidate_gametypes_question)
-  Candidate_gametypes_question!: Candidate_gametypes_question[]
+  // mot nhieu Result
+  @HasMany(() => Result)
+  Result!: Result[]
   // -----------------------------------
 
   // mot nhieu voi question

@@ -7,7 +7,7 @@ import Hr from '@models/entities/hr.entity'
 import Gametype from '@models/entities/gametype.entity'
 import Hrgametype from '@models/entities/hrgametype.entity'
 import Assessment from '@models/entities/assessment.entity'
-import Candidate_gametypes_question from '@models/entities/candidate_gametypes_question.entity'
+import Result from '@models/entities/result.entity'
 import Question from '@models/entities/question.entity'
 import Answer from '@models/entities/answer.entity'
 import Candidate from '@models/entities/candidate.entity'
@@ -35,8 +35,8 @@ export function getModelFromTableName(tableName: string): ModelCtor | undefined 
     case Assessment.tableName:
       item = DB.sequelize.model(Assessment)
       break
-    case Candidate_gametypes_question.tableName:
-      item = DB.sequelize.model(Candidate_gametypes_question)
+    case Result.tableName:
+      item = DB.sequelize.model(Result)
       break
     case Question.tableName:
       item = DB.sequelize.model(Question)

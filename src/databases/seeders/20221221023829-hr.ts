@@ -4,7 +4,7 @@ const hr = [
     user_name: 'Nguyen Danh Linh',
     email: 'linhnd@paditech.com',
     role: 'hr',
-    password: 'ndl20092001',
+    password: '$2b$10$QodJlRAWD.RGjSx9iJV1NeirSUJdLObYh7L3kBROaPOUGCAh75Keq',
     company: 'paditech',
     company_size: 'size company',
     company_industry: 'industry company',

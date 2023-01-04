@@ -22,14 +22,3 @@ module.exports = {
     ]
   },
 }
-
-/*
-import { hash } from 'bcrypt';
-Promise.all(
-    [
-        'password01',
-        'password02',
-        'password03',
-    ].map( it =>  hash(it, 10))
-).then(it => console.log('>>>>>>>>>>>>>>>>>', it))
-*/
