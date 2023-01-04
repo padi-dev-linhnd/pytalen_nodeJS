@@ -4,7 +4,7 @@ const admin = [
     user_name: 'Nguyen Danh Linh',
     email: 'linhnd@paditech.com',
     role: 'admin',
-    password: 'ndl20092001',
+    password: '$2b$10$W892ejPEqt7sWndaEfH6POQYsPC5gWGe4ezjQtGyir2N29swqmGWq',
     created_at: new Date(),
     updated_at: new Date(),
   },

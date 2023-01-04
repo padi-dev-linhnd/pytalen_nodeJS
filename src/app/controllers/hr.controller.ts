@@ -5,7 +5,6 @@ import { Service } from 'typedi'
 import HrRepository from '@repositories/hr.repository'
 import { AdminMiddleware } from '@middlewares/check_Admin.middleware'
 import { HrMiddleware } from '@middlewares/check_Hr.middleware'
-import jwt, { Secret, JwtPayload } from 'jsonwebtoken'
 
 @JsonController('/hr')
 @Service()
@@ -35,8 +34,8 @@ export class HrController extends BaseController {
     try {
       const dataReq = req.body
       const dataHr = await this.hrRepository.create_Hr(dataReq)
-      if (dataHr == null) {
-        return this.setErrors(401, 'Email already exists', res)
+      if (typeof dataHr == 'string') {
+        return this.setErrors(400, dataHr, res)
       }
       return this.setData(dataHr).setMessage('Success').responseSuccess(res)
     } catch (error) {
@@ -49,20 +48,14 @@ export class HrController extends BaseController {
   async invite_cadidate(@Req() req: any, @Res() res: any, next: NextFunction) {
     try {
       const accessToken = req.headers.authorization.split('Bearer ')[1].trim()
-      const dataHr: any = jwt.verify(accessToken, process.env.JWT_SECRET)
-      if (dataHr.role == 'admin') {
-        return this.setErrors(401, 'you are admin', res)
-      }
       const dataReq: any = req.body
-      dataReq.hr_id = dataHr.id
-      const dataInvite = await this.hrRepository.invite_candidate(dataReq)
-      if (dataInvite == null) {
-        return this.setErrors(
-          401,
-          'This Hr does not have the right to invite Candidate into this Assessment',
-          res,
-        )
+
+      const dataInvite = await this.hrRepository.invite_candidate(dataReq, accessToken)
+
+      if (typeof dataInvite == 'string') {
+        return this.setErrors(400, dataInvite, res)
       }
+
       return this.setData(dataInvite).setMessage('Success').responseSuccess(res)
     } catch (error) {
       return this.setMessage('Error').responseErrors(res)
@@ -74,6 +67,9 @@ export class HrController extends BaseController {
     try {
       const dataReq = req.body
       const dataHr = await this.hrRepository.User_Login(dataReq)
+      if (typeof dataHr == 'string') {
+        return this.setErrors(400, dataHr, res)
+      }
       return this.setData(dataHr).setMessage('Success').responseSuccess(res)
     } catch (error) {
       return this.setMessage('Error').responseErrors(res)

@@ -1,7 +1,7 @@
 import { Service } from 'typedi'
 import { ModelCtor, Model } from 'sequelize-typescript'
 import { BaseRepositoryInterface } from './interfaces/base.repository.interface'
-import jwt, { Secret, JwtPayload } from 'jsonwebtoken'
+import { verify_password, format_jwt } from '@service/all_service.service'
 
 @Service()
 export abstract class BaseRepository<M extends Model> implements BaseRepositoryInterface {
@@ -55,18 +55,16 @@ export abstract class BaseRepository<M extends Model> implements BaseRepositoryI
   // login/logout
   async User_Login(dataReq: any): Promise<any> {
     const dataDB: any = await this.findByCondition({
-      where: { email: dataReq.email, password: dataReq.password },
-      attributes: ['id', 'email', 'role'],
+      where: { email: dataReq.email },
+      attributes: ['id', 'email', 'role', 'password'],
       raw: true,
       nest: true,
     })
-    if (!dataDB) return null
-    else {
-      const token = jwt.sign(dataDB, process.env.JWT_SECRET)
-      dataDB.token = token
-      delete dataDB.role
-      return dataDB
+    if (dataDB == null) return 'tai khoan hoac mat khau khong chinh xac'
+    if (verify_password(dataReq.password, dataDB.password)) {
+      return format_jwt(dataDB)
     }
+    return 'tai khoan hoac mat khau khong chinh xac'
   }
 
   /**

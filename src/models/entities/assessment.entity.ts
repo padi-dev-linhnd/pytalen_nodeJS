@@ -8,12 +8,14 @@ import {
   UpdatedAt,
   BelongsTo,
   BelongsToMany,
+  HasMany,
 } from 'sequelize-typescript'
 import Hr from './hr.entity'
 import Gametype from './gametype.entity'
 import Assessment_gametype from './assessment_gametype.entity'
 import Candidate from './candidate.entity'
 import Invite from './invite.entity'
+import Result from './result.entity'
 
 @Table({
   tableName: 'assessment',
@@ -51,6 +53,9 @@ export default class Assessment extends Model<Assessment> {
 
   @BelongsToMany(() => Candidate, () => Invite)
   Candidate!: Candidate[]
+
+  @HasMany(() => Result)
+  Result!: Result[]
 
   @CreatedAt
   @Column

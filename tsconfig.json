@@ -32,15 +32,11 @@
       "@models/*": ["models/*"],
       "@interfaces/*": ["interfaces/*"],
       "@repositories/*": ["app/repositories/*"],
-      "@utils/*": ["common/utils/*"]
+      "@utils/*": ["common/utils/*"],
+      "@service/*": ["app/service/*"]
     }
   },
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.json",
-    "src/tests/*.test.ts",
-    "src/tests/**/*.test.ts"
-  ],
+  "include": ["src/**/*.ts", "src/**/*.json", "src/tests/*.test.ts", "src/tests/**/*.test.ts"],
   "exclude": ["node_modules", "src/logs", "src/tests"],
   "ts-node": {
     "require": ["tsconfig-paths/register"]

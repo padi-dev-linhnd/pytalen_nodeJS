@@ -1,9 +1,10 @@
+import { AdminMiddleware } from '@middlewares/check_Admin.middleware'
 import { Get, Post, JsonController, Req, Res, UseBefore } from 'routing-controllers'
 import { NextFunction } from 'express'
 import { BaseController } from './base.controller'
 import { Service } from 'typedi'
 import { HrMiddleware } from '@middlewares/check_Hr.middleware'
-import jwt, { Secret, JwtPayload } from 'jsonwebtoken'
+import { CandidateMiddleware } from '@middlewares/check_Candidate.middleware'
 import Assessment from '@repositories/assessment.repository'
 
 @JsonController('/assessment')
@@ -25,28 +26,42 @@ export class AssessmentController extends BaseController {
     }
   }
 
+  @UseBefore(AdminMiddleware)
+  @Get('/all')
+  async getAll(@Req() req: any, @Res() res: any, next: NextFunction) {
+    try {
+      const data = await this.assessment.getAllWhere({
+        attributes: ['id', 'name', 'position', 'start_date', 'end_date'],
+      })
+      return this.setData(data).setMessage('Success').responseSuccess(res)
+    } catch (error) {
+      return this.setMessage('Error').responseErrors(res)
+    }
+  }
+
   @UseBefore(HrMiddleware)
   @Post('/create')
   async create_ssessment(@Req() req: any, @Res() res: any, next: NextFunction) {
     try {
       const accessToken = req.headers.authorization.split('Bearer ')[1].trim()
-      const dataHr: any = jwt.verify(accessToken, process.env.JWT_SECRET)
-      if (dataHr.role == 'admin') {
-        return this.setErrors(401, 'you are admin', res)
-      }
       const dataReq: any = req.body
-      dataReq.hr_id = dataHr.id
-      const dataAssessment = await this.assessment.create_Assessment(dataReq)
-      if (dataAssessment === null) {
-        return this.setErrors(401, 'Assessment already exists', res)
+      const dataAssessment = await this.assessment.create_Assessment(dataReq, accessToken)
+
+      if (typeof dataAssessment == 'string') {
+        return this.setErrors(400, dataAssessment, res)
       }
-      if (dataAssessment === undefined) {
-        return this.setErrors(
-          401,
-          'Hr does not have permission to create Assessment with these GameType',
-          res,
-        )
-      }
+      return this.setData(dataAssessment).setMessage('Success').responseSuccess(res)
+    } catch (error) {
+      return this.setMessage('Error').responseErrors(res)
+    }
+  }
+
+  @UseBefore(CandidateMiddleware)
+  @Get('/list-by-candidate')
+  async Candidate_start_game(@Req() req: any, @Res() res: any, next: NextFunction) {
+    try {
+      const accessToken = req.headers.authorization.split('Bearer ')[1].trim()
+      const dataAssessment = await this.assessment.getAssessmentCandidate(accessToken)
       return this.setData(dataAssessment).setMessage('Success').responseSuccess(res)
     } catch (error) {
       return this.setMessage('Error').responseErrors(res)

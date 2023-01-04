@@ -5,35 +5,27 @@ import { BaseRepository } from './base.repository'
 import { HrRepositoryInterface } from './interfaces/hr.repository.interface'
 import { ModelContainer } from '@decorators/model.decorator'
 import HrGameType from '@models/entities/hrgametype.entity'
-import nodemailer from 'nodemailer'
 import Candidate from '@models/entities/candidate.entity'
 import crypto from 'crypto'
 import Invite from '@models/entities/invite.entity'
-import Assessment from '@models/entities/assessment.entity'
-import console from 'console'
+import {
+  check_email,
+  hash_password,
+  format_gametype,
+  format_hr,
+  check_gametype,
+  check_hr_asessment,
+  check_candidate,
+  check_candidate_invite,
+  format_invite,
+  Invite_candidate,
+  format_dataReq_hr,
+} from '@service/all_service.service'
 
 @Service({ global: true })
 class HrRepository extends BaseRepository<Hr> implements HrRepositoryInterface<Hr> {
   constructor(@ModelContainer(Hr.tableName) User: ModelCtor<Hr>) {
     super(User)
-  }
-
-  startInvite(email: string, token: string): Promise<any> {
-    const transporter = nodemailer.createTransport({
-      service: 'Gmail',
-      auth: {
-        user: 'linhtru2001@gmail.com',
-        pass: 'lnmubgvtwcbnaykm',
-      },
-    })
-    var mainOptions = {
-      from: 'Nguyen Danh Linh',
-      to: email,
-      subject: 'invitation to take the test',
-      text: `https://localhost:3000/api/v1/candidate?token=${token}`,
-    }
-    transporter.sendMail(mainOptions)
-    return
   }
 
   async findByEmail(email: string): Promise<Hr> {
@@ -42,71 +34,45 @@ class HrRepository extends BaseRepository<Hr> implements HrRepositoryInterface<H
     })
   }
 
-  async create_Hr(dataReq: any): Promise<Hr> {
-    const dataGame = dataReq.Game_type
-    delete dataReq.Game_type
-    const dataHr = await this.findByEmail(dataReq.email)
-    if (dataHr) {
-      return null
-    }
-    await this.create(dataReq)
+  async create_Hr(dataReq: any): Promise<any> {
+    const check: any = await check_email(dataReq.email)
+    if (check == true) return 'email da ton tai'
+    const data_gametype = dataReq.Game_type
+    const check2: any = await check_gametype(data_gametype)
+    if (check2 == false) return 'list gametype nhap vao khong hop le'
+    const dataHr: any = format_hr(dataReq)
+    await this.create(dataHr)
     const hr_id = (await this.findByEmail(dataReq.email)).id
-    dataGame.map((item, index) => {
-      dataGame[index] = {
-        gametype_id: item,
-        hr_id: hr_id,
-      }
-    })
-    await HrGameType.bulkCreate(dataGame)
+    const dataGametype = format_gametype(data_gametype, hr_id)
+    await HrGameType.bulkCreate(dataGametype)
     return dataReq
   }
 
-  async invite_candidate(dataReq: any): Promise<Hr> {
+  async invite_candidate(dataReq: any, accessToken: any): Promise<any> {
     const list_email = dataReq.list_email
     delete dataReq.list_email
-    const dataHr = await this.getAllWhere({
-      where: { id: dataReq.hr_id },
-      include: {
-        model: Assessment,
-        where: { id: dataReq.assessment_id },
-      },
-    })
-    if (dataHr.length == 0) {
-      return null
-    }
+
+    const dataformat = format_dataReq_hr(dataReq, accessToken)
+    if (typeof dataformat === 'string') return dataformat
+
+    const dataHr = await check_hr_asessment(dataReq)
+    if (typeof dataHr === 'string') return dataHr
+
     list_email.forEach(async (item) => {
-      const token = crypto.randomBytes(5).toString('hex')
-      this.startInvite(item, token)
-      const dataCandidate = await Candidate.findAll({
-        where: { email: item },
-        include: {
-          model: Assessment,
-          where: { id: dataReq.assessment_id },
-        },
-      })
-      const dataCandidate2: any = await Candidate.findAll({
-        where: { email: item },
-        raw: true,
-        nest: true,
-      })
-      console.log(dataCandidate2)
-      if (dataCandidate2.length > 0) {
-        await Invite.create({
-          candidate_id: dataCandidate2[0].id,
-          hr_id: dataReq.hr_id,
-          assessment_id: dataReq.assessment_id,
-        })
-      } else {
-        if (dataCandidate.length > 0) {
-          await Candidate.destroy({ where: { email: item } })
+      const id_candidate = await check_candidate(item)
+      if (id_candidate != -1) {
+        const candidate_token = (await Candidate.findOne({ where: { id: id_candidate } })).token
+        Invite_candidate(item, candidate_token)
+        const check_invite = await check_candidate_invite(dataReq, id_candidate)
+        if (check_invite == false) {
+          await Invite.create(format_invite(dataReq, id_candidate))
         }
+      } else {
+        const token = crypto.randomBytes(5).toString('hex')
+        Invite_candidate(item, token)
         await Candidate.create({ email: item, token: token })
         const candidate_id = (await Candidate.findOne({ where: { email: item, token: token } })).id
-        await Invite.create({
-          candidate_id: candidate_id,
-          hr_id: dataReq.hr_id,
-          assessment_id: dataReq.assessment_id,
-        })
+        await Invite.create(format_invite(dataReq, candidate_id))
       }
     })
     return list_email

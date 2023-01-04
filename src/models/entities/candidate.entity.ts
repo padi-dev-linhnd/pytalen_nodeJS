@@ -11,7 +11,7 @@ import {
 import Assessment from './assessment.entity'
 import Invite from './invite.entity'
 import Hr from './hr.entity'
-import Candidate_gametypes_question from './candidate_gametypes_question.entity'
+import Result from './result.entity'
 
 @Table({
   tableName: 'candidate',
@@ -35,9 +35,9 @@ export default class Candidate extends Model<Candidate> {
   Hr!: Hr[]
   // ----------------------------------
 
-  // mot nhieu Candidate_gametypes_question
-  @HasMany(() => Candidate_gametypes_question)
-  Candidate_gametypes_question!: Candidate_gametypes_question[]
+  // mot nhieu Result
+  @HasMany(() => Result)
+  Result!: Result[]
   // -----------------------------------
 
   @CreatedAt
