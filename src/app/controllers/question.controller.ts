@@ -9,7 +9,6 @@ const { Op } = require('sequelize')
 import Sequelize from 'sequelize'
 import Gametype from '@models/entities/gametype.entity'
 import Answer from '@models/entities/answer.entity'
-import Question from '@models/entities/question.entity'
 import {
   format_data_question_gametype1_and_dataReq,
   format_data_question_gametype2_and_dataReq,
@@ -17,6 +16,8 @@ import {
   format_data_question_gametype2,
   time_used,
 } from '@service/question.service'
+
+import { ResultController } from './result.controller'
 import ResultRepository from '@repositories/result.ropository'
 import Result from '@models/entities/result.entity'
 
@@ -27,58 +28,7 @@ export class QuestionController extends BaseController {
     super()
   }
 
-  async get_data_result_question(dataReq) {
-    try {
-      const resultRepository = new ResultRepository(Result)
-      const data = await resultRepository.getAllWhere({
-        where: {
-          gametype_id: dataReq.gametype_id,
-          candidate_id: dataReq.candidate_id,
-          assessment_id: dataReq.assessment_id,
-          answer: {
-            [Op.ne]: null,
-          },
-        },
-        include: [{ model: Gametype, attributes: ['total_time'] }, Question],
-        raw: true,
-        nest: true,
-      })
-      return data
-    } catch (error) {
-      return this.setMessage('Error')
-    }
-  }
-
-  async check_question_result(dataReq) {
-    try {
-      const resultRepository = new ResultRepository(Result)
-      const data = await resultRepository.getAllWhere({
-        where: {
-          gametype_id: dataReq.gametype_id,
-          candidate_id: dataReq.candidate_id,
-          assessment_id: dataReq.assessment_id,
-          answer: null,
-        },
-        raw: true,
-        nest: true,
-        include: [
-          Gametype,
-          {
-            model: Question,
-            include: [Answer],
-            attributes: ['id', 'gametype_id', 'question', 'point', 'level'],
-            nest: true,
-          },
-        ],
-      })
-      if (data.length > 0) {
-        return data
-      }
-    } catch (error) {
-      return this.setMessage('Error')
-    }
-  }
-
+  // OKE
   async generate_question_gametype1(level: any) {
     try {
       const data_question = await this.questionRepository.getAllWhere({
@@ -97,6 +47,7 @@ export class QuestionController extends BaseController {
     }
   }
 
+  // OKE
   async get_num_question_true(list_question_id) {
     try {
       const data_question = await this.questionRepository.getAllWhere({
@@ -119,6 +70,7 @@ export class QuestionController extends BaseController {
     }
   }
 
+  // OKE
   async generate_question_gametype2(list_question_id, dataReq) {
     try {
       let correct_answer = [1, 0]
@@ -164,46 +116,11 @@ export class QuestionController extends BaseController {
     }
   }
 
-  async get_list_question_id_and_total_point(dataReq) {
-    try {
-      const resultRepository = new ResultRepository(Result)
-      let total_points = 0
-      const list_question_id = []
-      const data: any = await resultRepository.getAllWhere({
-        where: {
-          gametype_id: dataReq.gametype_id,
-          assessment_id: dataReq.assessment_id,
-          candidate_id: dataReq.candidate_id,
-        },
-        attributes: ['assessment_id', 'question_id', 'point', 'gametype_id'],
-        raw: true,
-      })
-      console.log(data)
-      data.map((item) => {
-        list_question_id.push(item.question_id)
-        total_points += item.point
-        delete item.point
-      })
-      delete data[0].question_id
-      if (data.length == 0) {
-        data.push({
-          list_question_id: list_question_id,
-          total_points: 0,
-        })
-      } else {
-        data[0].list_question_id = list_question_id
-        data[0].total_points = total_points
-      }
-      return data[0]
-    } catch (error) {
-      return this.setMessage('Error')
-    }
-  }
-
+  // OKE
   async finish_game(dataReq) {
     try {
-      const resultRepository = new ResultRepository(Result)
-      await resultRepository.update(
+      const resultController = new ResultController(new ResultRepository(Result))
+      await resultController.update(
         { answer: '', status: false, point: 0 },
         {
           where: {
@@ -214,7 +131,7 @@ export class QuestionController extends BaseController {
           },
         },
       )
-      const data = await this.get_list_question_id_and_total_point(dataReq)
+      const data = await resultController.get_list_question_id_and_total_point(dataReq)
       const data_question = await this.questionRepository.getAllWhere({
         where: {
           id: {
@@ -248,6 +165,7 @@ export class QuestionController extends BaseController {
     }
   }
 
+  // OKE
   @UseBefore(CandidateMiddleware)
   @Post('/generate')
   async generate_question(@Req() req: any, @Res() res: any, next: NextFunction) {
@@ -257,7 +175,8 @@ export class QuestionController extends BaseController {
       const dataReq = req.body
       dataReq.candidate_id = data_candidate.id
 
-      const data_result_question: any = await this.get_data_result_question(dataReq)
+      const resultController = new ResultController(new ResultRepository(Result))
+      const data_result_question: any = await resultController.get_data_result_question(dataReq)
       if (data_result_question.length > 0) {
         if (
           data_result_question[data_result_question.length - 1].status == 0 &&
@@ -270,10 +189,10 @@ export class QuestionController extends BaseController {
         }
       }
 
-      let time_remaining = 99
-      const data_results: any = await this.get_list_question_id_and_total_point(dataReq)
-      const data_result: any = await this.check_question_result(dataReq)
-      if (data_result != undefined) {
+      let time_remaining = 100
+      const data_results: any = await resultController.get_list_question_id_and_total_point(dataReq)
+      const data_result: any = await resultController.get_question_answer_null(dataReq)
+      if (data_result.length > 0) {
         if (dataReq.gametype_id == 1) {
           time_remaining = data_result[0].Question.level * 20 - time_used(data_result[0].createdAt)
           format_data_question_gametype1(data_result, time_remaining, data_results)
@@ -295,27 +214,16 @@ export class QuestionController extends BaseController {
         return this.setData(data_result[0].Question).setMessage('Success').responseSuccess(res)
       }
 
-      const resultRepository = new ResultRepository(Result)
       if (dataReq.gametype_id == 1) {
         const data_question_gametype1 = await this.generate_question_gametype1(1)
-        format_data_question_gametype1_and_dataReq(
-          data_question_gametype1[0],
-          dataReq,
-          data_results,
-        )
-        resultRepository.create(dataReq)
+        format_data_question_gametype1_and_dataReq(data_question_gametype1, dataReq, data_results)
+        resultController.create(dataReq)
         return this.setData(data_question_gametype1[0]).setMessage('Success').responseSuccess(res)
       }
       if (dataReq.gametype_id == 2) {
         const data_question_gametype2 = await this.generate_question_gametype2([], dataReq)
-        format_data_question_gametype2_and_dataReq(
-          data_question_gametype2,
-          dataReq,
-          data_results,
-          time_remaining,
-        )
-        delete data_question_gametype2[0].time_remaining
-        resultRepository.create(dataReq)
+        format_data_question_gametype2_and_dataReq(data_question_gametype2, dataReq, data_results)
+        resultController.create(dataReq)
         return this.setData(data_question_gametype2[0]).setMessage('Success').responseSuccess(res)
       }
     } catch (error) {
@@ -323,6 +231,7 @@ export class QuestionController extends BaseController {
     }
   }
 
+  // OKE
   async get_previous_question_point(dataReq) {
     try {
       const data_question: any = await this.questionRepository.findByCondition({
@@ -355,8 +264,8 @@ export class QuestionController extends BaseController {
       }
       delete dataReq.answer
 
-      const resultRepository = new ResultRepository(Result)
-      resultRepository.update(data_update, { where: dataReq })
+      const resultController = new ResultController(new ResultRepository(Result))
+      resultController.update(data_update, { where: dataReq })
 
       return point
     } catch (error) {
@@ -364,6 +273,7 @@ export class QuestionController extends BaseController {
     }
   }
 
+  // OKE
   @UseBefore(CandidateMiddleware)
   @Post('/answer')
   async question_answer(@Req() req: any, @Res() res: any, next: NextFunction) {
@@ -373,10 +283,8 @@ export class QuestionController extends BaseController {
       const data_hr: any = jwt.verify(accessToken, process.env.JWT_SECRET)
       dataReq.candidate_id = data_hr.id
 
-      const data_result_question: any = await this.get_data_result_question(dataReq)
-      if (data_result_question.length >= 10) {
-        return this.finish_game(dataReq)
-      }
+      const resultController = new ResultController(new ResultRepository(Result))
+      const data_result_question: any = await resultController.get_data_result_question(dataReq)
       let time_remaining = 0
       if (data_result_question.length > 0) {
         if (dataReq.gametype_id == 2) {
@@ -387,12 +295,18 @@ export class QuestionController extends BaseController {
             return this.finish_game(dataReq)
           }
         }
+      } else {
+        const data_result: any = await resultController.get_question_answer_null(dataReq)
+        time_remaining =
+          Number(data_result[0].Gametype.total_time) - time_used(data_result[0].createdAt)
       }
 
       const previous_question_point: any = await this.get_previous_question_point(dataReq)
+      if (data_result_question.length >= 9) {
+        return this.finish_game(dataReq)
+      }
 
-      const resultRepository = new ResultRepository(Result)
-      const data_results: any = await this.get_list_question_id_and_total_point(dataReq)
+      const data_results: any = await resultController.get_list_question_id_and_total_point(dataReq)
       if (dataReq.gametype_id == 1) {
         if (previous_question_point == 0) {
           return this.finish_game(dataReq)
@@ -400,10 +314,10 @@ export class QuestionController extends BaseController {
         const question_data: any = await this.generate_question_gametype1(
           previous_question_point + 1,
         )
-        format_data_question_gametype1_and_dataReq(question_data[0], dataReq, data_results)
+        format_data_question_gametype1_and_dataReq(question_data, dataReq, data_results)
         question_data[0].previous_question_point = previous_question_point
         dataReq.question_id = question_data[0].id
-        await resultRepository.create(dataReq)
+        await resultController.create(dataReq)
         return this.setData(question_data[0]).setMessage('Success').responseSuccess(res)
       }
       if (dataReq.gametype_id == 2) {
@@ -411,15 +325,12 @@ export class QuestionController extends BaseController {
           data_results.list_question_id,
           dataReq,
         )
-        format_data_question_gametype2_and_dataReq(
-          question_data,
-          dataReq,
-          data_results,
-          time_remaining,
-        )
+        format_data_question_gametype2_and_dataReq(question_data, dataReq, data_results)
+        question_data[0].time_remaining = time_remaining
         question_data[0].previous_question_point = previous_question_point
         dataReq.question_id = question_data[0].id
-        await resultRepository.create(dataReq)
+        await resultController.create(dataReq)
+        question_data[0].time_remaining = time_remaining
         return this.setData(question_data[0]).setMessage('Success').responseSuccess(res)
       }
     } catch (error) {

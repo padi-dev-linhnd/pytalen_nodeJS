@@ -6,11 +6,14 @@ import CandidateRepository from '@repositories/candidate.repository'
 import { HrMiddleware } from '@middlewares/check_Hr.middleware'
 import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
-
+import { ValidateEmail } from '@service/base.services'
 import { Invite_candidate, format_data_invite } from '@service/candidate.service'
-import HrRepository from '@repositories/hr.repository'
-import Hr from '@models/entities/hr.entity'
+
+import { AssessmentController } from './assessment.controller'
+import AssessmentRepository from '@repositories/assessment.repository'
 import Assessment from '@models/entities/assessment.entity'
+
+import { InviteController } from './invite.controller'
 import InviteRepository from '@repositories/invite.repository'
 import Invite from '@models/entities/invite.entity'
 
@@ -21,38 +24,7 @@ export class CandidateController extends BaseController {
     super()
   }
 
-  @Get('/')
-  async Candidate_start(@Req() req: any, @Res() res: any, next: NextFunction) {
-    try {
-      return res.send('NHẬP EMAIL Ở ĐÂY ĐỂ ĐĂNG NHẬP')
-    } catch (error) {
-      return this.setMessage('Error').responseErrors(res)
-    }
-  }
-
-  @Post('/login')
-  async Candidate_login(@Req() req: any, @Res() res: any, next: NextFunction) {
-    try {
-      const token_params = req.query.token
-      const dataReq = req.body
-      dataReq.token = token_params
-
-      const data_candidate: any = await this.candidateRepository.findByCondition({
-        where: dataReq,
-        raw: true,
-      })
-      if (data_candidate == null) {
-        return res.status(400).json({ status: 400, message: 'dang nhap that bai' })
-      }
-      data_candidate.login = true
-      const token = jwt.sign(data_candidate, process.env.JWT_SECRET)
-
-      return this.setData(token).setMessage('Success').responseSuccess(res)
-    } catch (error) {
-      return this.setMessage('Error').responseErrors(res)
-    }
-  }
-
+  // OKE
   @UseBefore(HrMiddleware)
   @Post('/invite')
   async invite_cadidate(@Req() req: any, @Res() res: any, next: NextFunction) {
@@ -64,16 +36,14 @@ export class CandidateController extends BaseController {
       const list_email = dataReq.list_email
       delete dataReq.list_email
 
-      const hrRepository = new HrRepository(Hr)
-      const data_hr = await hrRepository.findByCondition({
-        where: { id: dataReq.hr_id },
-        include: {
-          model: Assessment,
-          where: { id: dataReq.assessment_id },
-        },
+      const assessmentController = new AssessmentController(new AssessmentRepository(Assessment))
+      const data_assessment: any = await assessmentController.getAllWhere({
+        where: { id: dataReq.assessment_id },
+        raw: true,
       })
-      if (data_hr == null) {
-        return res.status(400).json({ status: 400, message: 'Ban khong so huu Assessment nay' })
+      console.log(data_assessment)
+      if (data_assessment[0].locked == true) {
+        return this.setErrors(400, 'assessment nay da dong', res)
       }
 
       list_email.forEach(async (item) => {
@@ -82,11 +52,12 @@ export class CandidateController extends BaseController {
           raw: true,
           nest: true,
         })
-        const inviteRepository = new InviteRepository(Invite)
+
+        const inviteController = new InviteController(new InviteRepository(Invite))
         if (data_candidate != null) {
           const candidate_token = data_candidate.token
           Invite_candidate(item, candidate_token)
-          const data_invite = await inviteRepository.findByCondition({
+          const data_invite = await inviteController.findByCondition({
             where: {
               candidate_id: data_candidate.id,
               hr_id: dataReq.hr_id,
@@ -94,7 +65,7 @@ export class CandidateController extends BaseController {
             },
           })
           if (data_invite == null) {
-            await inviteRepository.create(format_data_invite(dataReq, data_candidate.id))
+            await inviteController.create(format_data_invite(dataReq, data_candidate.id))
           }
         } else {
           const token = crypto.randomBytes(5).toString('hex')
@@ -103,11 +74,47 @@ export class CandidateController extends BaseController {
           const candidate_data = await this.candidateRepository.findByCondition({
             where: { email: item, token: token },
           })
-          await inviteRepository.create(format_data_invite(dataReq, candidate_data.id))
+          await inviteController.create(format_data_invite(dataReq, candidate_data.id))
         }
       })
-
       return this.setData(list_email).setMessage('Success').responseSuccess(res)
+    } catch (error) {
+      return this.setMessage('Error').responseErrors(res)
+    }
+  }
+
+  // OKE
+  @Get('/login')
+  async Candidate_start(@Req() req: any, @Res() res: any, next: NextFunction) {
+    try {
+      return res.send('NHẬP EMAIL Ở ĐÂY ĐỂ ĐĂNG NHẬP')
+    } catch (error) {
+      return this.setMessage('Error').responseErrors(res)
+    }
+  }
+
+  // OKE
+  @Post('/login')
+  async Candidate_login(@Req() req: any, @Res() res: any, next: NextFunction) {
+    try {
+      const token_params = req.query.token
+      const dataReq = req.body
+      dataReq.token = token_params
+      if (ValidateEmail([dataReq.email]) == false) {
+        return this.setErrors(400, 'email not valid', res)
+      }
+
+      const data_candidate: any = await this.candidateRepository.findByCondition({
+        where: dataReq,
+        raw: true,
+      })
+      if (data_candidate == null) {
+        return this.setErrors(400, 'dang nhap that bai', res)
+      }
+      data_candidate.login = true
+      const token = jwt.sign(data_candidate, process.env.JWT_SECRET)
+
+      return this.setData(token).setMessage('Success').responseSuccess(res)
     } catch (error) {
       return this.setMessage('Error').responseErrors(res)
     }

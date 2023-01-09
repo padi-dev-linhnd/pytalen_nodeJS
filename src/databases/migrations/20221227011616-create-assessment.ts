@@ -24,13 +24,22 @@ module.exports = {
       start_date: {
         type: Sequelize.STRING(255),
         field: 'start_date',
-        allowNull: false,
+        allowNull: true,
+        defaultValue: '3000-01-01 00:00:00 +00:00',
       },
 
       end_date: {
         type: Sequelize.STRING(255),
         field: 'end_date',
-        allowNull: false,
+        allowNull: true,
+        defaultValue: '2023-01-01 00:00:00 +00:00',
+      },
+
+      locked: {
+        type: Sequelize.BOOLEAN(false),
+        field: 'locked',
+        allowNull: true,
+        defaultValue: false,
       },
 
       hr_id: {

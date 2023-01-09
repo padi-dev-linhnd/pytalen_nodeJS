@@ -3,24 +3,23 @@ export function format_data_question_gametype1_and_dataReq(
   dataReq: any,
   data_results,
 ) {
-  dataReq.question_id = data_question_gametype1.id
-  data_question_gametype1.time_question = data_question_gametype1.level * 20
-  // data_question_gametype1.total_time = data_question_gametype1.Gametype.total_time
-  // data_question_gametype1.total_question = data_question_gametype1.Gametype.total_question
-  data_question_gametype1.question_number = data_results.list_question_id.length + 1
-  data_question_gametype1.total_points = data_results.total_points
-  data_question_gametype1.time_remaining = data_question_gametype1.level * 20
-  delete data_question_gametype1.Gametype
-  delete data_question_gametype1.Answer
-  delete data_question_gametype1.createdAt
-  delete data_question_gametype1.updatedAt
+  dataReq.question_id = data_question_gametype1[0].id
+  data_question_gametype1[0].time_question = data_question_gametype1[0].level * 20
+  // data_question_gametype1[0].total_time = data_question_gametype1[0].Gametype.total_time
+  // data_question_gametype1[0].total_question = data_question_gametype1[0].Gametype.total_question
+  data_question_gametype1[0].question_number = data_results.list_question_id.length + 1
+  data_question_gametype1[0].total_points = data_results.total_points
+  data_question_gametype1[0].time_remaining = data_question_gametype1[0].level * 20
+  delete data_question_gametype1[0].Gametype
+  delete data_question_gametype1[0].Answer
+  delete data_question_gametype1[0].createdAt
+  delete data_question_gametype1[0].updatedAt
 }
 
 export function format_data_question_gametype2_and_dataReq(
   data_question_gametype2: any,
   dataReq: any,
   data_results,
-  time_remaining,
 ) {
   dataReq.question_id = data_question_gametype2[0].id
   const list_answer = ['dung', 'sai']
@@ -30,7 +29,7 @@ export function format_data_question_gametype2_and_dataReq(
   data_question_gametype2[0].total_time = total_time
   data_question_gametype2[0].question_number = data_results.list_question_id.length + 1
   data_question_gametype2[0].total_points = data_results.total_points
-  data_question_gametype2[0].time_remaining = time_remaining
+  // data_question_gametype2[0].time_remaining = time_remaining
   delete data_question_gametype2[0].Answer
   delete data_question_gametype2[0].Gametype
 }

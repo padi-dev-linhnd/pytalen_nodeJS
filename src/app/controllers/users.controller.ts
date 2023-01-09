@@ -11,6 +11,7 @@ export class UsersController extends BaseController {
     super()
   }
 
+  // OKE
   @Get('/list')
   async getUser(@Req() req: any, @Res() res: any, next: NextFunction) {
     try {
