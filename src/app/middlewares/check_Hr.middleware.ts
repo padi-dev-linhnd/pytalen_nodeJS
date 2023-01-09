@@ -17,10 +17,10 @@ export class HrMiddleware implements ExpressMiddlewareInterface {
     try {
       const dataHr: any = jwt.verify(accessToken, process.env.JWT_SECRET)
       if (dataHr.role == 'admin') {
-        return next()
+        return next(new HttpException(401, 'Ban la admin'))
       }
       if (dataHr.role != 'hr') {
-        return next(new HttpException(401, 'Not hr'))
+        return next(new HttpException(401, 'Ban khong phai Hr'))
       }
       return next()
     } catch (error) {

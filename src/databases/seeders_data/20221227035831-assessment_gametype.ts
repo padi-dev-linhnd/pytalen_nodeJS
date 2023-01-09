@@ -6,6 +6,13 @@ const assessment_gametype = [
     created_at: new Date(),
     updated_at: new Date(),
   },
+  {
+    id: 2,
+    assessment_id: 1,
+    gametype_id: 2,
+    created_at: new Date(),
+    updated_at: new Date(),
+  },
 ]
 
 module.exports = {

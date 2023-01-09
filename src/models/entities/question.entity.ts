@@ -36,6 +36,9 @@ export default class Question extends Model<Question> {
   @Column
   level!: number
 
+  @Column
+  point: number
+
   // mot nhieu voi Result
   @HasMany(() => Result)
   Result!: Result[]

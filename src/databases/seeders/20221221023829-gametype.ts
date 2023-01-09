@@ -11,9 +11,9 @@ const gametype = [
   {
     id: 2,
     name: 'Logical',
-    total_time: '90',
-    total_question: '30',
-    time_question: '3',
+    total_time: '200',
+    total_question: '10',
+    time_question: '20',
     created_at: new Date(),
     updated_at: new Date(),
   },
