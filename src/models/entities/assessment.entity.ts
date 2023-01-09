@@ -32,10 +32,13 @@ export default class Assessment extends Model<Assessment> {
   position!: string
 
   @Column
-  start_date!: string
+  start_date: string
 
   @Column
-  end_date!: string
+  end_date: string
+
+  @Column
+  locked!: boolean
 
   // nhieu - mot hr
   @ForeignKey(() => Hr)

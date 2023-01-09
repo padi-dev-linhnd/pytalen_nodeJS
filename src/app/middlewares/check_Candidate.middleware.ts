@@ -1,9 +1,10 @@
-import { Get, Post, JsonController, Req, Res } from 'routing-controllers'
+import { Req, Res } from 'routing-controllers'
 import { NextFunction } from 'express'
 import { ExpressMiddlewareInterface } from 'routing-controllers'
 import { Service } from 'typedi'
 import { HttpException } from '@exceptions/http.exception'
-import jwt, { Secret, JwtPayload } from 'jsonwebtoken'
+import jwt from 'jsonwebtoken'
+import { ValidateEmail } from '@service/base.services'
 
 import AssessmentGametypeRepository from '@repositories/assessment_gametype.repository'
 import Assessment_gametype from '@models/entities/assessment_gametype.entity'
@@ -16,6 +17,9 @@ import Invite from '@models/entities/invite.entity'
 
 import ResultRepository from '@repositories/result.ropository'
 import Result from '@models/entities/result.entity'
+
+import AssessmentRepository from '@repositories/assessment.repository'
+import Assessment from '@models/entities/assessment.entity'
 
 @Service()
 export class CandidateMiddleware implements ExpressMiddlewareInterface {
@@ -30,6 +34,9 @@ export class CandidateMiddleware implements ExpressMiddlewareInterface {
       const dataCandidate: any = jwt.verify(accessToken, process.env.JWT_SECRET)
       const dataReq = req.body
       dataReq.candidate_id = dataCandidate.id
+      if (req.query.assessment_id) {
+        dataReq.assessment_id = req.query.assessment_id
+      }
 
       if (dataCandidate.role == 'admin') {
         return next(new HttpException(401, 'Ban la admin'))
@@ -39,6 +46,19 @@ export class CandidateMiddleware implements ExpressMiddlewareInterface {
       }
       if (dataCandidate.login != true) {
         return next(new HttpException(401, 'Not Candidate'))
+      }
+
+      if (dataReq.email) {
+        const data = ValidateEmail([dataReq.email])
+        if (data == false) {
+          return next(new HttpException(400, 'email khong hop le'))
+        }
+      }
+      if (dataReq.list_email) {
+        const data = ValidateEmail(dataReq.list_email)
+        if (data == false) {
+          return next(new HttpException(400, 'email khong hop le'))
+        }
       }
 
       if ((dataReq.candidate_id, dataReq.assessment_id)) {
@@ -72,8 +92,7 @@ export class CandidateMiddleware implements ExpressMiddlewareInterface {
             gametype_id: dataReq.gametype_id,
           },
         })
-        if (data == null)
-          return next(new HttpException(400, 'ban nhap sai question_id hoa gametype_id'))
+        if (data == null) return next(new HttpException(400, 'loi question_id hoac gametype_id'))
       }
 
       if (
@@ -93,12 +112,24 @@ export class CandidateMiddleware implements ExpressMiddlewareInterface {
           },
         })
         if (data == null)
-          return next(
-            new HttpException(
-              400,
-              'cau hoi nay ban da hoan thanh hoac ban k co quyen tra loi cau hoi nay',
-            ),
-          )
+          return next(new HttpException(400, 'da hoan thanh hoac k co quyen tra loi cau hoi nay'))
+      }
+
+      if (dataReq.assessment_id) {
+        const assessmentRepository = new AssessmentRepository(Assessment)
+        const data_assessment = await assessmentRepository.findByCondition({
+          where: { id: dataReq.assessment_id },
+          raw: true,
+        })
+        if (data_assessment.locked == true) {
+          return next(new HttpException(400, 'assessment nay da dong'))
+        }
+        if (new Date(data_assessment.start_date) > new Date()) {
+          return next(new HttpException(400, 'assessment chua bat dau'))
+        }
+        if (new Date() > new Date(data_assessment.end_date)) {
+          return next(new HttpException(400, 'assessment da ket thuc'))
+        }
       }
 
       return next()

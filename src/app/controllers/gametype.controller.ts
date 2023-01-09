@@ -7,10 +7,8 @@ import GametypeRepository from '@repositories/gametype.repository'
 import { HrMiddleware } from '@middlewares/check_Hr.middleware'
 import { CandidateMiddleware } from '@middlewares/check_Candidate.middleware'
 import jwt from 'jsonwebtoken'
-
+const { Op } = require('sequelize')
 import Hr from '@models/entities/hr.entity'
-import InviteRepository from '@repositories/invite.repository'
-import Invite from '@models/entities/invite.entity'
 import Assessment from '@models/entities/assessment.entity'
 
 @JsonController('/gametype')
@@ -20,6 +18,35 @@ export class GametypeController extends BaseController {
     super()
   }
 
+  // OKE
+  @UseBefore(AdminMiddleware)
+  @Get('/all')
+  async getAll(@Req() req: any, @Res() res: any, next: NextFunction) {
+    try {
+      const data = await this.gametypeRepository.getAll()
+      return this.setData(data).setMessage('Success').responseSuccess(res)
+    } catch (error) {
+      return this.setMessage('Error').responseErrors(res)
+    }
+  }
+
+  // OKE
+  async getAllData(list_gametype) {
+    try {
+      const data = await this.gametypeRepository.getAllWhere({
+        where: {
+          id: {
+            [Op.or]: list_gametype,
+          },
+        },
+      })
+      return data
+    } catch (error) {
+      return this.setMessage('Error')
+    }
+  }
+
+  // OKE
   @UseBefore(HrMiddleware)
   @Get('/list')
   async getGametype(@Req() req: any, @Res() res: any, next: NextFunction) {
@@ -43,19 +70,29 @@ export class GametypeController extends BaseController {
     }
   }
 
-  @UseBefore(AdminMiddleware)
-  @Get('/all')
-  async getAll(@Req() req: any, @Res() res: any, next: NextFunction) {
+  // OKE
+  async getAllDataByHr(list_gametype, dataReq) {
     try {
       const data = await this.gametypeRepository.getAllWhere({
-        attributes: ['name', 'total_time', 'time_question', 'total_question'],
+        where: {
+          id: {
+            [Op.or]: list_gametype,
+          },
+        },
+        include: {
+          model: Hr,
+          where: {
+            id: dataReq.hr_id,
+          },
+        },
       })
-      return this.setData(data).setMessage('Success').responseSuccess(res)
+      return data
     } catch (error) {
-      return this.setMessage('Error').responseErrors(res)
+      return this.setMessage('Error')
     }
   }
 
+  // OKE
   @UseBefore(CandidateMiddleware)
   @Get('/generate-list')
   async generate_gametype(@Req() req: any, @Res() res: any, next: NextFunction) {
@@ -63,19 +100,6 @@ export class GametypeController extends BaseController {
       const accessToken = req.headers.authorization.split('Bearer ')[1].trim()
       const data_candidate: any = jwt.verify(accessToken, process.env.JWT_SECRET)
       const assessment_id = req.query.assessment_id
-
-      const inviteRepository = new InviteRepository(Invite)
-      const data_invite = await inviteRepository.findByCondition({
-        where: {
-          candidate_id: data_candidate.id,
-          assessment_id: assessment_id,
-        },
-      })
-      if (data_invite == null) {
-        return res
-          .status(400)
-          .json({ status: 400, message: 'ban khong co quyen vao Assessment nay' })
-      }
 
       const data_gametype = await this.gametypeRepository.getAllWhere({
         include: {
