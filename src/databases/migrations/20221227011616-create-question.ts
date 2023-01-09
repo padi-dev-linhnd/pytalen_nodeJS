@@ -34,6 +34,12 @@ module.exports = {
         allowNull: true,
       },
 
+      point: {
+        type: Sequelize.INTEGER,
+        field: 'point',
+        allowNull: false,
+      },
+
       createdAt: {
         allowNull: false,
         field: 'created_at',

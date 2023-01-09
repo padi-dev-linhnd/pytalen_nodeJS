@@ -1,10 +1,18 @@
-import { Get, JsonController, Req, Res, UseBefore, Post } from 'routing-controllers'
+import { Get, JsonController, Req, Res, UseBefore, Post, Delete } from 'routing-controllers'
 import { NextFunction } from 'express'
 import { BaseController } from './base.controller'
 import { Service } from 'typedi'
 import HrRepository from '@repositories/hr.repository'
 import { AdminMiddleware } from '@middlewares/check_Admin.middleware'
-import { HrMiddleware } from '@middlewares/check_Hr.middleware'
+import jwt from 'jsonwebtoken'
+import bcrypt from 'bcrypt'
+const { Op } = require('sequelize')
+
+import { format_data_hr, format_data_gametype } from '@service/hr.service'
+import GametypeRepository from '@repositories/gametype.repository'
+import Gametype from '@models/entities/gametype.entity'
+import HrGametypeRepository from '@repositories/hr_gametype.repository'
+import Hr_gametype from '@models/entities/hrgametype.entity'
 
 @JsonController('/hr')
 @Service()
@@ -13,16 +21,37 @@ export class HrController extends BaseController {
     super()
   }
 
+  @Post('/login')
+  async Hr_login(@Req() req: any, @Res() res: any, next: NextFunction) {
+    try {
+      const dataReq = req.body
+      const data_hr = await this.hrRepository.findByCondition({
+        where: { email: dataReq.email },
+        attributes: ['id', 'email', 'role', 'password'],
+        raw: true,
+      })
+      if (data_hr == null || bcrypt.compareSync(dataReq.password, data_hr.password) == false) {
+        return res.status(400).json({ status: 400, message: 'sai ten dang nhap hoac mat khau' })
+      }
+      return this.setData(jwt.sign(data_hr, process.env.JWT_SECRET))
+        .setMessage('Success')
+        .responseSuccess(res)
+    } catch (error) {
+      return this.setMessage('Error').responseErrors(res)
+    }
+  }
+
   @UseBefore(AdminMiddleware)
   @Get('/list')
   async getHr(@Req() req: any, @Res() res: any, next: NextFunction) {
     try {
-      const findAllHrData = await this.hrRepository.getAllWhere({
+      const all_data_hr = await this.hrRepository.getAllWhere({
         attributes: {
           exclude: ['password', 'token', 'createdAt', 'updatedAt'],
         },
       })
-      return this.setData(findAllHrData).setMessage('Success').responseSuccess(res)
+
+      return this.setData(all_data_hr).setMessage('Success').responseSuccess(res)
     } catch (error) {
       return this.setMessage('Error').responseErrors(res)
     }
@@ -33,44 +62,46 @@ export class HrController extends BaseController {
   async createHr(@Req() req: any, @Res() res: any, next: NextFunction) {
     try {
       const dataReq = req.body
-      const dataHr = await this.hrRepository.create_Hr(dataReq)
-      if (typeof dataHr == 'string') {
-        return this.setErrors(400, dataHr, res)
+      const data_hr = await this.hrRepository.findByCondition({ where: { email: dataReq.email } })
+      if (data_hr) {
+        return res.status(400).json({ status: 400, message: 'email da ton tai' })
       }
-      return this.setData(dataHr).setMessage('Success').responseSuccess(res)
+
+      const list_gametype = Array.from(new Set(dataReq.Game_type))
+      const gametypeRepository = new GametypeRepository(Gametype)
+      const data_gametype = await gametypeRepository.getAllWhere({
+        where: {
+          id: {
+            [Op.or]: list_gametype,
+          },
+        },
+      })
+      if (data_gametype.length != list_gametype.length) {
+        return res.status(400).json({ status: 400, message: 'list gametype khong hop le' })
+      }
+
+      const hr_data = format_data_hr(dataReq)
+      const data = await this.hrRepository.create(hr_data)
+
+      const hr_last_insert = await this.hrRepository.findByEmail(data.email)
+      const data_gametype_format = format_data_gametype(list_gametype, hr_last_insert.id)
+
+      const hrGametypeRepository = new HrGametypeRepository(Hr_gametype)
+      hrGametypeRepository.bulkcreate(data_gametype_format)
+
+      return this.setData(data).setMessage('Success').responseSuccess(res)
     } catch (error) {
       return this.setMessage('Error').responseErrors(res)
     }
   }
 
-  @UseBefore(HrMiddleware)
-  @Post('/invite')
-  async invite_cadidate(@Req() req: any, @Res() res: any, next: NextFunction) {
-    try {
-      const accessToken = req.headers.authorization.split('Bearer ')[1].trim()
-      const dataReq: any = req.body
-
-      const dataInvite = await this.hrRepository.invite_candidate(dataReq, accessToken)
-
-      if (typeof dataInvite == 'string') {
-        return this.setErrors(400, dataInvite, res)
-      }
-
-      return this.setData(dataInvite).setMessage('Success').responseSuccess(res)
-    } catch (error) {
-      return this.setMessage('Error').responseErrors(res)
-    }
-  }
-
-  @Post('/login')
-  async Hr_login(@Req() req: any, @Res() res: any, next: NextFunction) {
+  @UseBefore(AdminMiddleware)
+  @Delete('/delete')
+  async deleteHr(@Req() req: any, @Res() res: any, next: NextFunction) {
     try {
       const dataReq = req.body
-      const dataHr = await this.hrRepository.User_Login(dataReq)
-      if (typeof dataHr == 'string') {
-        return this.setErrors(400, dataHr, res)
-      }
-      return this.setData(dataHr).setMessage('Success').responseSuccess(res)
+      const data = await this.hrRepository.deleteById(dataReq.hr_id)
+      return this.setData(data).setMessage('Success').responseSuccess(res)
     } catch (error) {
       return this.setMessage('Error').responseErrors(res)
     }

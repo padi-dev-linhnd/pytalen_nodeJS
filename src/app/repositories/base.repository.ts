@@ -1,7 +1,6 @@
 import { Service } from 'typedi'
 import { ModelCtor, Model } from 'sequelize-typescript'
 import { BaseRepositoryInterface } from './interfaces/base.repository.interface'
-import { verify_password, format_jwt } from '@service/all_service.service'
 
 @Service()
 export abstract class BaseRepository<M extends Model> implements BaseRepositoryInterface {
@@ -40,6 +39,10 @@ export abstract class BaseRepository<M extends Model> implements BaseRepositoryI
     return this.model.create(object)
   }
 
+  async bulkcreate(array: []): Promise<M[]> {
+    return this.model.bulkCreate(array)
+  }
+
   async createWithAssociation(object: any, association: any) {
     return this.model.create(object, association)
   }
@@ -50,21 +53,6 @@ export abstract class BaseRepository<M extends Model> implements BaseRepositoryI
 
   async update(object: Object, condition: any): Promise<any> {
     return this.model.update(object, condition)
-  }
-
-  // login/logout
-  async User_Login(dataReq: any): Promise<any> {
-    const dataDB: any = await this.findByCondition({
-      where: { email: dataReq.email },
-      attributes: ['id', 'email', 'role', 'password'],
-      raw: true,
-      nest: true,
-    })
-    if (dataDB == null) return 'tai khoan hoac mat khau khong chinh xac'
-    if (verify_password(dataReq.password, dataDB.password)) {
-      return format_jwt(dataDB)
-    }
-    return 'tai khoan hoac mat khau khong chinh xac'
   }
 
   /**

@@ -1,6 +1,15 @@
 const result = [
   {
     id: 1,
+    gametype_id: 1,
+    candidate_id: 1,
+    question_id: 21,
+    assessment_id: 1,
+    created_at: new Date(),
+    updated_at: new Date(),
+  },
+  {
+    id: 2,
     gametype_id: 2,
     candidate_id: 1,
     question_id: 1,
