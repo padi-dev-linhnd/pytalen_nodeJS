@@ -23,6 +23,10 @@ export class HrMiddleware implements ExpressMiddlewareInterface {
       const dataHr: any = jwt.verify(accessToken, process.env.JWT_SECRET)
       const dataReq = req.body
       dataReq.hr_id = dataHr.id
+      if (req.query.assessment_id) {
+        dataReq.assessment_id = req.query.assessment_id
+      }
+
       if (dataHr.role == 'admin') {
         return next(new HttpException(401, 'Ban la admin'))
       }

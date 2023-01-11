@@ -1,8 +1,10 @@
-import { Get, JsonController, Req, Res } from 'routing-controllers'
+import { Get, JsonController, Req, Res, UseBefore } from 'routing-controllers'
 import { BaseController } from './base.controller'
 import { Service } from 'typedi'
 import ResultRepository from '@repositories/result.ropository'
 const { Op } = require('sequelize')
+import { AdminMiddleware } from '@middlewares/check_Admin.middleware'
+import Sequelize from 'sequelize'
 
 import Gametype from '@models/entities/gametype.entity'
 import Question from '@models/entities/question.entity'
@@ -113,6 +115,27 @@ export class ResultController extends BaseController {
   async create(data) {
     try {
       this.resultRepository.create(data)
+    } catch (error) {
+      return this.setMessage('Error')
+    }
+  }
+
+  // OKE
+  async get_num_candidate_played(assessment_id) {
+    try {
+      const data = await this.resultRepository.getAllWhere({
+        where: {
+          assessment_id: assessment_id,
+        },
+        attributes: ['candidate_id'],
+        raw: true,
+        nest: true,
+      })
+      const list_candidate = []
+      data.map((item) => {
+        list_candidate.push(item.candidate_id)
+      })
+      return Array.from(new Set(list_candidate)).length
     } catch (error) {
       return this.setMessage('Error')
     }

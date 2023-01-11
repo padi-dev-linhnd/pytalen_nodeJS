@@ -4,12 +4,14 @@ export function format_data_question_gametype1_and_dataReq(
   data_results,
 ) {
   dataReq.question_id = data_question_gametype1[0].id
-  data_question_gametype1[0].time_question = data_question_gametype1[0].level * 20
+  data_question_gametype1[0].time_question =
+    data_question_gametype1[0].level * Number(process.env.time_question1)
   // data_question_gametype1[0].total_time = data_question_gametype1[0].Gametype.total_time
   // data_question_gametype1[0].total_question = data_question_gametype1[0].Gametype.total_question
   data_question_gametype1[0].question_number = data_results.list_question_id.length + 1
   data_question_gametype1[0].total_points = data_results.total_points
-  data_question_gametype1[0].time_remaining = data_question_gametype1[0].level * 20
+  data_question_gametype1[0].time_remaining =
+    data_question_gametype1[0].level * Number(process.env.time_question1)
   delete data_question_gametype1[0].Gametype
   delete data_question_gametype1[0].Answer
   delete data_question_gametype1[0].createdAt
@@ -52,7 +54,7 @@ export function format_data_question_gametype2(data_result: any, time_remaining,
 
 export function format_data_question_gametype1(data_result: any, time_remaining, data_results) {
   const total_question = data_result[0].Gametype.total_question
-  const time_question = data_result[0].Question.level * 20
+  const time_question = data_result[0].Question.level * Number(process.env.time_question1)
   delete data_result[0].Question.Answer
   data_result[0].Question.time_question = time_question
   data_result[0].Question.time_remaining = time_remaining

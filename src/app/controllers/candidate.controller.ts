@@ -8,6 +8,16 @@ import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
 import { ValidateEmail } from '@service/base.services'
 import { Invite_candidate, format_data_invite } from '@service/candidate.service'
+import { CandidateMiddleware } from '@middlewares/check_Candidate.middleware'
+import { AdminMiddleware } from '@middlewares/check_Admin.middleware'
+import Hr from '@models/entities/hr.entity'
+import Sequelize from 'sequelize'
+import Result from '@models/entities/result.entity'
+const { Op } = require('sequelize')
+
+import { QuestionController } from './question.controller'
+import QuestionRepository from '@repositories/question.repository'
+import Question from '@models/entities/question.entity'
 
 import { AssessmentController } from './assessment.controller'
 import AssessmentRepository from '@repositories/assessment.repository'
@@ -41,7 +51,6 @@ export class CandidateController extends BaseController {
         where: { id: dataReq.assessment_id },
         raw: true,
       })
-      console.log(data_assessment)
       if (data_assessment[0].locked == true) {
         return this.setErrors(400, 'assessment nay da dong', res)
       }
@@ -115,6 +124,105 @@ export class CandidateController extends BaseController {
       const token = jwt.sign(data_candidate, process.env.JWT_SECRET)
 
       return this.setData(token).setMessage('Success').responseSuccess(res)
+    } catch (error) {
+      return this.setMessage('Error').responseErrors(res)
+    }
+  }
+
+  // OKE
+  @UseBefore(CandidateMiddleware)
+  @Post('/finish_game')
+  async game_finish(@Req() req: any, @Res() res: any, next: NextFunction) {
+    try {
+      const dataReq = req.body
+      const accessToken = req.headers.authorization.split('Bearer ')[1].trim()
+      const data_candidate: any = jwt.verify(accessToken, process.env.JWT_SECRET)
+      dataReq.candidate_id = data_candidate.id
+
+      const questionController = new QuestionController(new QuestionRepository(Question))
+
+      const finish_game = await questionController.finish_game(dataReq)
+
+      return this.setData(finish_game).setMessage('Success').responseSuccess(res)
+    } catch (error) {
+      return this.setMessage('Error').responseErrors(res)
+    }
+  }
+
+  // OKE
+  @UseBefore(AdminMiddleware)
+  @Get('/all')
+  async getAll(@Req() req: any, @Res() res: any, next: NextFunction) {
+    try {
+      const data = await this.candidateRepository.getAllWhere({
+        attributes: {
+          exclude: ['token'],
+        },
+      })
+      return this.setData(data).setMessage('Success').responseSuccess(res)
+    } catch (error) {
+      return this.setMessage('Error').responseErrors(res)
+    }
+  }
+
+  // OKE
+  @UseBefore(HrMiddleware)
+  @Get('/list')
+  async getList(@Req() req: any, @Res() res: any, next: NextFunction) {
+    try {
+      const accessToken = req.headers.authorization.split('Bearer ')[1].trim()
+      const data_hr: any = jwt.verify(accessToken, process.env.JWT_SECRET)
+
+      const data = await this.candidateRepository.getAllWhere({
+        attributes: {
+          exclude: ['token'],
+        },
+        include: {
+          model: Hr,
+          where: {
+            id: data_hr.id,
+          },
+          attributes: [],
+        },
+      })
+
+      return this.setData(data).setMessage('Success').responseSuccess(res)
+    } catch (error) {
+      return this.setMessage('Error').responseErrors(res)
+    }
+  }
+
+  // OKE
+  @UseBefore(AdminMiddleware)
+  @Get('/all_result')
+  async getAll_Result(@Req() req: any, @Res() res: any) {
+    try {
+      const params = req.query
+      const list_id = []
+      if (params.id) {
+        list_id.push(params.id)
+      }
+      const data = await this.candidateRepository.getAllWhere({
+        where: {
+          id: { [Op.or]: list_id },
+        },
+        attributes: [[Sequelize.col('candidate_id'), 'candidate_id']],
+        include: {
+          model: Result,
+          as: 'Result',
+          attributes: [
+            'assessment_id',
+            'gametype_id',
+            [Sequelize.fn('sum', Sequelize.col('point')), 'total_point'],
+          ],
+          where: {
+            candidate_id: { [Op.ne]: null },
+          },
+        },
+        group: ['candidate_id', 'gametype_id', 'assessment_id'],
+        order: [['id', 'ASC']],
+      })
+      return this.setData(data).setMessage('Success').responseSuccess(res)
     } catch (error) {
       return this.setMessage('Error').responseErrors(res)
     }

@@ -177,24 +177,23 @@ export class QuestionController extends BaseController {
 
       const resultController = new ResultController(new ResultRepository(Result))
       const data_result_question: any = await resultController.get_data_result_question(dataReq)
-      if (data_result_question.length > 0) {
-        if (
-          data_result_question[data_result_question.length - 1].status == 0 &&
-          dataReq.gametype_id == 1
-        ) {
-          return this.finish_game(dataReq)
-        }
-        if (data_result_question.length >= 10 && dataReq.gametype_id == 2) {
-          return this.finish_game(dataReq)
-        }
+      if (data_result_question.length >= Number(process.env.num_question)) {
+        return this.finish_game(dataReq)
       }
 
       let time_remaining = 100
       const data_results: any = await resultController.get_list_question_id_and_total_point(dataReq)
       const data_result: any = await resultController.get_question_answer_null(dataReq)
+
+      if (data_result_question.length > 0 && data_result == 0) {
+        return this.finish_game(dataReq)
+      }
+
       if (data_result.length > 0) {
         if (dataReq.gametype_id == 1) {
-          time_remaining = data_result[0].Question.level * 20 - time_used(data_result[0].createdAt)
+          time_remaining =
+            data_result[0].Question.level * Number(process.env.time_question1) -
+            time_used(data_result[0].createdAt)
           format_data_question_gametype1(data_result, time_remaining, data_results)
         }
         if (dataReq.gametype_id == 2) {
@@ -234,40 +233,50 @@ export class QuestionController extends BaseController {
   // OKE
   async get_previous_question_point(dataReq) {
     try {
-      const data_question: any = await this.questionRepository.findByCondition({
-        where: {
-          id: dataReq.question_id,
-        },
-        include: {
-          model: Answer,
+      let data_update
+      if (dataReq.skip == 1 && dataReq.gametype_id != 1) {
+        data_update = {
+          answer: '',
+          status: false,
+          point: 0,
+        }
+      } else {
+        const data_question: any = await this.questionRepository.findByCondition({
           where: {
-            answer: dataReq.answer,
+            id: dataReq.question_id,
           },
-        },
-        raw: true,
-        nest: true,
-      })
+          include: {
+            model: Answer,
+            where: {
+              answer: dataReq.answer,
+            },
+          },
+          raw: true,
+          nest: true,
+        })
 
-      let status = false
-      let point = 0
-      if (data_question != null) {
-        if (data_question.Answer.correct_answer != 0) {
-          status = true
-          point = data_question.point
+        let status = false
+        let point = 0
+        if (data_question != null) {
+          if (data_question.Answer.correct_answer != 0) {
+            status = true
+            point = data_question.point
+          }
+        }
+        data_update = {
+          answer: dataReq.answer,
+          status: status,
+          point: point,
         }
       }
 
-      const data_update = {
-        answer: dataReq.answer,
-        status: status,
-        point: point,
-      }
       delete dataReq.answer
+      delete dataReq.skip
 
       const resultController = new ResultController(new ResultRepository(Result))
       resultController.update(data_update, { where: dataReq })
 
-      return point
+      return data_update.point
     } catch (error) {
       return this.setMessage('Error')
     }
@@ -280,8 +289,8 @@ export class QuestionController extends BaseController {
     try {
       const dataReq = req.body
       const accessToken = req.headers.authorization.split('Bearer ')[1].trim()
-      const data_hr: any = jwt.verify(accessToken, process.env.JWT_SECRET)
-      dataReq.candidate_id = data_hr.id
+      const data_candidate: any = jwt.verify(accessToken, process.env.JWT_SECRET)
+      dataReq.candidate_id = data_candidate.id
 
       const resultController = new ResultController(new ResultRepository(Result))
       const data_result_question: any = await resultController.get_data_result_question(dataReq)
@@ -300,19 +309,16 @@ export class QuestionController extends BaseController {
         time_remaining =
           Number(data_result[0].Gametype.total_time) - time_used(data_result[0].createdAt)
       }
-
       const previous_question_point: any = await this.get_previous_question_point(dataReq)
-      if (data_result_question.length >= 9) {
+      if (data_result_question.length >= Number(process.env.num_question) - 1) {
         return this.finish_game(dataReq)
       }
-
       const data_results: any = await resultController.get_list_question_id_and_total_point(dataReq)
       if (dataReq.gametype_id == 1) {
-        if (previous_question_point == 0) {
-          return this.finish_game(dataReq)
-        }
         const question_data: any = await this.generate_question_gametype1(
-          previous_question_point + 1,
+          data_result_question.length == 0
+            ? 2
+            : data_result_question[data_result_question.length - 1].Question.level + 2,
         )
         format_data_question_gametype1_and_dataReq(question_data, dataReq, data_results)
         question_data[0].previous_question_point = previous_question_point
