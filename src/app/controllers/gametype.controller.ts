@@ -121,4 +121,24 @@ export class GametypeController extends BaseController {
       return this.setMessage('Error').responseErrors(res)
     }
   }
+
+  // OKE
+  async get_list_gametype_assessment(assessment_id) {
+    try {
+      const data = await this.gametypeRepository.getAllWhere({
+        nest: true,
+        raw: true,
+        include: {
+          model: Assessment,
+          where: { id: assessment_id },
+        },
+      })
+      data.map((item) => {
+        delete item.Assessment
+      })
+      return data
+    } catch (error) {
+      return this.setMessage('Error')
+    }
+  }
 }
