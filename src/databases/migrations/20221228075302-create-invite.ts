@@ -14,7 +14,7 @@ module.exports = {
         type: Sequelize.INTEGER,
         field: 'hr_id',
         allowNull: true,
-        onDelete: 'CASCADE',
+        onDelete: 'SET NULL',
         onUpdate: 'CASCADE',
         references: {
           model: 'hr',
@@ -26,7 +26,7 @@ module.exports = {
         type: Sequelize.INTEGER,
         field: 'candidate_id',
         allowNull: true,
-        onDelete: 'CASCADE',
+        onDelete: 'SET NULL',
         onUpdate: 'CASCADE',
         references: {
           model: 'candidate',
@@ -38,7 +38,7 @@ module.exports = {
         type: Sequelize.INTEGER,
         field: 'assessment_id',
         allowNull: true,
-        onDelete: 'CASCADE',
+        onDelete: 'SET NULL',
         onUpdate: 'CASCADE',
         references: {
           model: 'assessment',

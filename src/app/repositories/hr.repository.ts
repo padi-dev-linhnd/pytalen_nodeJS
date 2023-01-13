@@ -13,6 +13,8 @@ class HrRepository extends BaseRepository<Hr> implements HrRepositoryInterface<H
   async findByEmail(email: string): Promise<Hr> {
     return this.findByCondition({
       where: { email: email },
+      nest: true,
+      raw: true,
     })
   }
 }

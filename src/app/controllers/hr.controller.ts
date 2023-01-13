@@ -67,6 +67,8 @@ export class HrController extends BaseController {
       const hrGametypeController = new HrGametypeController(new HrGametypeRepository(Hr_gametype))
       await hrGametypeController.bulkCreate(data_gametype_format)
 
+      delete hr_last_insert.password
+
       return this.setData(hr_last_insert).setMessage('Success').responseSuccess(res)
     } catch (error) {
       return this.setMessage('Error').responseErrors(res)
