@@ -14,7 +14,7 @@ module.exports = {
         type: Sequelize.INTEGER,
         field: 'question_id',
         allowNull: true,
-        onDelete: 'CASCADE',
+        onDelete: 'SET NULL',
         onUpdate: 'CASCADE',
         references: {
           model: 'question',

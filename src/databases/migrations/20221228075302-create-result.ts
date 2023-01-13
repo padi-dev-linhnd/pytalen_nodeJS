@@ -14,7 +14,7 @@ module.exports = {
         type: Sequelize.INTEGER,
         field: 'gametype_id',
         allowNull: true,
-        onDelete: 'CASCADE',
+        onDelete: 'SET NULL',
         onUpdate: 'CASCADE',
         references: {
           model: 'gametype',
@@ -26,7 +26,7 @@ module.exports = {
         type: Sequelize.INTEGER,
         field: 'candidate_id',
         allowNull: true,
-        onDelete: 'CASCADE',
+        onDelete: 'SET NULL',
         onUpdate: 'CASCADE',
         references: {
           model: 'candidate',
@@ -38,7 +38,7 @@ module.exports = {
         type: Sequelize.INTEGER,
         field: 'question_id',
         allowNull: true,
-        onDelete: 'CASCADE',
+        onDelete: 'SET NULL',
         onUpdate: 'CASCADE',
         references: {
           model: 'question',
@@ -50,7 +50,7 @@ module.exports = {
         type: Sequelize.INTEGER,
         field: 'assessment_id',
         allowNull: true,
-        onDelete: 'CASCADE',
+        onDelete: 'SET NULL',
         onUpdate: 'CASCADE',
         references: {
           model: 'assessment',
