@@ -27,10 +27,13 @@ export class HrMiddleware implements ExpressMiddlewareInterface {
         dataReq.assessment_id = req.query.assessment_id
       }
 
+<<<<<<< HEAD
       if (req.query.id) {
         dataReq.assessment_id = req.query.id
       }
 
+=======
+>>>>>>> bc19ca4 (export_result)
       if (dataHr.role == 'admin') {
         return next(new HttpException(401, 'Ban la admin'))
       }
