@@ -50,7 +50,7 @@ export default class Gametype extends Model<Gametype> {
   Result!: Result[]
   // -----------------------------------
 
-  // mot nhieu voi question
+  // mot nhieu voi questionwqefweqf
   @HasMany(() => Question)
   Question!: Question[]
   // --------------------

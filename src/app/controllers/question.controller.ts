@@ -177,6 +177,7 @@ export class QuestionController extends BaseController {
 
       const resultController = new ResultController(new ResultRepository(Result))
       const data_result_question: any = await resultController.get_data_result_question(dataReq)
+<<<<<<< HEAD
 
       // if (data_result_question.length > 0) {
       //   if (
@@ -186,6 +187,8 @@ export class QuestionController extends BaseController {
       //     return this.finish_game(dataReq)
       //   }
       // }
+=======
+>>>>>>> bc19ca4 (export_result)
       if (data_result_question.length >= Number(process.env.num_question)) {
         return this.finish_game(dataReq)
       }
@@ -324,9 +327,12 @@ export class QuestionController extends BaseController {
       }
       const data_results: any = await resultController.get_list_question_id_and_total_point(dataReq)
       if (dataReq.gametype_id == 1) {
+<<<<<<< HEAD
         // if (previous_question_point == 0) {
         //   return this.finish_game(dataReq)
         // }
+=======
+>>>>>>> bc19ca4 (export_result)
         const question_data: any = await this.generate_question_gametype1(
           data_result_question.length == 0
             ? 2
