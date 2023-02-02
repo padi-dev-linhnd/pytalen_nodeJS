@@ -6,14 +6,47 @@ describe('sample', () => {
   })
 })
 
-import { AssessmentController } from '../../app/controllers/assessment.controller'
 import AssessmentRepository from '../../app/repositories/assessment.repository'
 import Assessment from '../../models/entities/assessment.entity'
 
-it('list_assessment[0].id = 1', async () => {
-  const assessmentController = new AssessmentController(new AssessmentRepository(Assessment))
+describe('check assessment', () => {
+  const table = [
+    {
+      params: {
+        id: 1,
+      },
+      expected: {
+        name: 'assessment',
+        position: 'thuc tap',
+        start_date: '2022-12-27 09:45:00',
+        end_date: '2022-12-28 09:45:00',
+        hr_id: 1,
+      },
+    },
+    {
+      params: {
+        id: 2,
+      },
+      expected: {
+        name: 'assessment2',
+        position: 'thuc tap',
+        start_date: '2022-12-27 09:45:00',
+        end_date: '2022-12-28 09:45:00',
+        hr_id: 1,
+      },
+    },
+  ]
 
-  const list_assessment = await assessmentController.getAllWhere({})
-
-  expect(list_assessment[0].id).toEqual(1)
+  const assessmentRepository = new AssessmentRepository(Assessment)
+  test.each(table)('params:$params', async ({ params, expected }) => {
+    const data_assessment = await assessmentRepository.findByCondition({
+      where: params,
+      nest: true,
+      raw: true,
+      attributes: {
+        exclude: ['createdAt', 'updatedAt', 'id', 'locked'],
+      },
+    })
+    expect(data_assessment).toEqual(expected)
+  })
 })
